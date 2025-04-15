@@ -370,25 +370,14 @@ const MemoView: React.FC = () => {
   }
   
   return (
-    <div className="bg-white shadow overflow-hidden sm:rounded-lg">
-      <div className="px-4 py-5 sm:px-6 flex justify-between items-center">
-        <div>
-          <h2 className="text-lg leading-6 font-medium text-gray-900">Boo-Boo Report</h2>
-          <p className="mt-1 max-w-2xl text-sm text-gray-500">
-            Injury report for {getChildName()}
-          </p>
-        </div>
-        <button
-          type="button"
-          onClick={() => navigate('/front-desk')}
-          className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-        >
-          Back to Reports
-        </button>
+    <div className="bg-white shadow-lg rounded-xl border border-gold">
+      <div className="px-4 py-5 sm:px-6 bg-primary rounded-t-xl">
+        <h2 className="text-lg leading-6 font-heading font-bold uppercase text-gold">Boo Boo Report</h2>
+        <p className="mt-1 max-w-2xl text-sm text-gold font-body">Injury report for {getChildName()}</p>
       </div>
       
       {/* Report Status */}
-      <div className="border-t border-gray-200 px-4 py-5 sm:px-6">
+      <div className="border-t border-gold px-4 py-5 sm:px-6 bg-light rounded-b-xl">
         <dl className="grid grid-cols-1 gap-x-4 gap-y-6 sm:grid-cols-2">
           <div className="sm:col-span-1">
             <dt className="text-sm font-medium text-gray-500">Report Status</dt>
@@ -441,7 +430,7 @@ const MemoView: React.FC = () => {
       </div>
       
       {/* Action Buttons */}
-      <div className="border-t border-gray-200 px-4 py-5 sm:px-6">
+      <div className="border-t border-gold px-4 py-5 sm:px-6 bg-light rounded-b-xl">
         <div className="flex space-x-3">
           {!report?.is_reviewed && (
             <button
@@ -474,7 +463,7 @@ const MemoView: React.FC = () => {
       </div>
       
       {/* Memo Content */}
-      <div className="border-t border-gray-200">
+      <div className="border-t border-gold bg-light rounded-b-xl">
         <div className="px-4 py-5 sm:p-6">
           {isGeneratingMemo ? (
             <div className="text-center py-8">

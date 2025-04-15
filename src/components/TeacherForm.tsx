@@ -624,7 +624,7 @@ const TeacherForm: React.FC = () => {
           )}
           
           {/* Form Actions */}
-          <div className="mt-6 flex justify-end">
+          <div className="mt-6 flex justify-end space-x-3">
             <button
               type="button"
               onClick={() => {
@@ -646,18 +646,18 @@ const TeacherForm: React.FC = () => {
                 setShowSuggestions(false);
                 setAcceptedSuggestions({});
               }}
-              className="ml-3 inline-flex justify-center py-2 px-4 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+              className="ml-3 inline-flex justify-center py-2 px-4 border border-gold shadow-sm text-sm font-medium rounded-md text-dark bg-gold hover:bg-primary hover:text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gold transition-colors duration-150 font-bold uppercase"
             >
-              Clear Form
+              CLEAR FORM
             </button>
             
             {!showSuggestions && (
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="ml-3 inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                className="ml-3 inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-bold rounded-md text-white bg-primary hover:bg-secondary focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gold transition-colors duration-150 uppercase"
               >
-                {isSubmitting ? 'Processing...' : 'Submit for Review'}
+                {isSubmitting ? 'PROCESSING...' : 'SUBMIT FOR REVIEW'}
               </button>
             )}
             
@@ -666,9 +666,9 @@ const TeacherForm: React.FC = () => {
                 type="button"
                 onClick={handleSubmitForValidation}
                 disabled={isSubmitting}
-                className="ml-3 inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                className="ml-3 inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-bold rounded-md text-white bg-primary hover:bg-secondary focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gold transition-colors duration-150 uppercase"
               >
-                {isSubmitting ? 'Processing...' : 'Re-evaluate with AI'}
+                {isSubmitting ? 'PROCESSING...' : 'RE-EVALUATE WITH AI'}
               </button>
             )}
           </div>

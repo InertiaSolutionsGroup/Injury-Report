@@ -78,15 +78,13 @@ const FrontDeskView: React.FC = () => {
   };
   
   return (
-    <div className="bg-white shadow overflow-hidden sm:rounded-lg">
-      <div className="px-4 py-5 sm:px-6">
-        <h2 className="text-lg leading-6 font-medium text-gray-900">Front Desk - Injury Reports</h2>
-        <p className="mt-1 max-w-2xl text-sm text-gray-500">
-          View and manage submitted injury reports.
-        </p>
+    <div className="bg-light shadow-lg rounded-xl border border-gold">
+      <div className="px-4 py-5 sm:px-6 bg-primary rounded-t-xl">
+        <h2 className="text-lg leading-6 font-heading font-bold uppercase text-gold">Front Desk - Injury Reports</h2>
+        <p className="mt-1 max-w-2xl text-sm text-gold font-body">View and manage submitted injury reports.</p>
       </div>
       
-      <div className="border-t border-gray-200 px-4 py-5 sm:p-6">
+      <div className="border-t border-gold px-4 py-5 sm:p-6 bg-light rounded-b-xl">
         {/* User Selection */}
         {!isUserSelected && (
           <div className="max-w-md mx-auto">

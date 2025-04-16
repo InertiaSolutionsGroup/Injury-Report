@@ -1,3 +1,4 @@
+// Moved from src/utils/testFormSubmission.js
 // Automated test script for injury report form submission
 const { createClient } = require('@supabase/supabase-js');
 require('dotenv').config();

@@ -1,5 +1,5 @@
 <!--
-Last updated: 2025-04-16 10:55 EDT
+Last updated: 2025-04-16 11:57 EDT
 NOTE: Update this timestamp whenever the document is updated.
 -->
 
@@ -24,16 +24,23 @@ This document is designed to help any Large Language Model (LLM) assistant quick
 - Created detailed workflow documentation with component status ([docs/WORKFLOW.md](./WORKFLOW.md))
 - Implemented graceful error handling for Supabase operations
 - Fixed "Submit as is" functionality to properly write to Supabase database
+- Created comprehensive database schema documentation ([docs/DATABASE_SCHEMA.md](./DATABASE_SCHEMA.md))
+- Updated the database schema to include AI validation tracking fields
+- Modified the code to use the new AI validation fields
+- Created automated testing scripts for form submission and Supabase connection
+- Created dedicated `/tests` directory and organized all test assets there
+- Created detailed n8n webhook interactions documentation ([docs/n8n-interactions.md](./n8n-interactions.md))
+- Added React test for AI validation UI to verify suggestion display
 
 ## 3. Known Issues / Blockers
 - n8n webhooks for validation and memo generation are currently stubbed out and not functional
+- Some test files have TypeScript errors due to missing Jest type definitions (need to run `npm i --save-dev @types/jest`)
 - Automated tests do not currently run due to missing or unmocked external dependencies (e.g., API modules). Tests need to be updated with proper mocks for meaningful results.
 - Some test coverage is minimal; additional unit and integration tests are recommended for new subcomponents.
-- **Database Schema**: The Supabase database schema is missing fields for AI validation tracking. See the schema update section below.
 
 ## 4. Next Steps
+- Install Jest type definitions (`npm i --save-dev @types/jest`) to resolve TypeScript errors in test files
 - Implement the n8n workflows for validation and memo generation
-- Apply the database schema updates in `supabase/schema_update.sql` to enable AI validation tracking
 - Continue refactoring to extract any remaining complex logic into custom hooks
 - Add proper TypeScript interfaces for all component props
 - Mock external dependencies in tests to enable automated test runs
@@ -51,6 +58,8 @@ This document is designed to help any Large Language Model (LLM) assistant quick
 - Write concise, readable code and documentation
 - Always update this handoff document after major changes
 - **Important**: The "Submit as is" functionality should write directly to Supabase, bypassing the n8n validation
+- **Important**: Always check the database schema in `supabase/schema.sql` and `supabase/schema_update.sql` when working with database operations
+- **Important**: All test scripts should be placed in the `/tests` directory, not in `src/utils/`
 
 ## 6. Relevant Files
 - **Core Hooks**:
@@ -74,15 +83,18 @@ This document is designed to help any Large Language Model (LLM) assistant quick
 - **Database Schema**:
   - `supabase/schema.sql` - Main database schema definition
   - `supabase/schema_update.sql` - Required schema updates for AI validation tracking
-- **Testing Utilities**:
-  - `src/utils/testFormSubmission.js` - Automated test for form submission
-  - `src/utils/testSupabase.js` - Utility to test Supabase connection
+- **Testing**:
+  - `/tests/testFormSubmission.js` - Automated test for form submission
+  - `/tests/testSupabase.js` - Utility to test Supabase connection
+  - `/tests/TeacherForm.AISuggestions.test.tsx` - React test for AI validation UI
 - **Documentation**:
   - `docs/README.md` - Main documentation index
   - `docs/WORKFLOW.md` - Detailed workflow and component status
   - `docs/instructions.md` - Developer quick reference
   - `docs/CHANGELOG.md` - Project change history
   - `docs/ENVIRONMENT.md` - Environment configuration
+  - `docs/DATABASE_SCHEMA.md` - Database schema documentation
+  - `docs/n8n-interactions.md` - n8n webhook interactions documentation
 
 ## 7. Application Workflow Overview
 The application follows this general workflow:
@@ -107,27 +119,8 @@ See [WORKFLOW.md](./WORKFLOW.md) for a detailed breakdown of each component and 
 - [instructions.md](./instructions.md) - Developer quick reference
 - [CHANGELOG.md](./CHANGELOG.md) - Project change history
 - [ENVIRONMENT.md](./ENVIRONMENT.md) - Environment configuration
-
-## 9. Database Schema Updates
-
-The application requires the following schema updates to fully support AI validation tracking:
-
-```sql
--- Add AI validation fields to InjuryReports table
-ALTER TABLE "InjuryReports"
-ADD COLUMN IF NOT EXISTS ai_validated BOOLEAN DEFAULT FALSE,
-ADD COLUMN IF NOT EXISTS ai_suggestions_count INTEGER DEFAULT 0,
-ADD COLUMN IF NOT EXISTS ai_suggestions_accepted INTEGER DEFAULT 0;
-```
-
-These updates are available in the `supabase/schema_update.sql` file. To apply them:
-
-1. Navigate to the Supabase project dashboard
-2. Go to the SQL Editor
-3. Paste the contents of `supabase/schema_update.sql`
-4. Run the SQL commands
-
-After applying these updates, the application will be able to track AI validation metrics, including whether a report was validated by AI, how many suggestions were provided, and how many were accepted by the user.
+- [DATABASE_SCHEMA.md](./DATABASE_SCHEMA.md) - Database schema documentation
+- [n8n-interactions.md](./n8n-interactions.md) - n8n webhook interactions documentation
 
 ---
 

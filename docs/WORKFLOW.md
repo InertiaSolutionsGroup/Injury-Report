@@ -146,7 +146,7 @@ The main tables are:
 
 #### 4.1.2 Required Schema Updates
 
-For full functionality, the following schema updates are required (available in `supabase/schema_update.sql`):
+The database schema has been updated to include AI validation tracking fields (as defined in `supabase/schema_update.sql`):
 
 ```sql
 -- Add AI validation fields to InjuryReports table
@@ -161,7 +161,7 @@ These fields are used to track AI validation metrics:
 - `ai_suggestions_count`: Number of suggestions provided by AI validation
 - `ai_suggestions_accepted`: Number of AI suggestions accepted by the user
 
-Without these fields, the application will still function but won't be able to track AI validation metrics.
+The application code has been updated to use these fields when submitting injury reports.
 
 ### 4.2 n8n Integration
 

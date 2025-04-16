@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useInjuryReport } from '../hooks/useInjuryReport';
 import MemoHeader from './memo/MemoHeader';
 import MemoContainer from './memo/MemoContainer';
+import OriginalReportSection from './memo/OriginalReportSection';
 import ReviewModal from './memo/ReviewModal';
 import DeliverModal from './memo/DeliverModal';
 
@@ -88,13 +89,21 @@ const MemoView: React.FC = () => {
         onPrint={() => window.print()}
       />
       
-      {/* Memo Content */}
-      <MemoContainer
-        isGeneratingMemo={isGeneratingMemo}
-        memoError={memoError}
-        memo={memo}
-        onRetryGeneration={handleRetryMemoGeneration}
-      />
+      <div className="px-4 py-5 sm:p-6">
+        {/* Original Injury Report Section */}
+        <OriginalReportSection 
+          report={report} 
+          formatDate={formatDate} 
+        />
+        
+        {/* Memo Content */}
+        <MemoContainer
+          isGeneratingMemo={isGeneratingMemo}
+          memoError={memoError}
+          memo={memo}
+          onRetryGeneration={handleRetryMemoGeneration}
+        />
+      </div>
       
       {/* Modals */}
       <ReviewModal

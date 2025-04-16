@@ -1,5 +1,5 @@
 <!--
-Last updated: 2025-04-16 11:57 EDT
+Last updated: 2025-04-16 13:44 EDT
 NOTE: Update this timestamp whenever the document is updated.
 -->
 
@@ -8,6 +8,9 @@ NOTE: Update this timestamp whenever the document is updated.
 ## [Unreleased]
 
 ### Added
+- (2025-04-16 13:44) Added `OriginalReportSection` component to display the original teacher submission in the front desk view
+- (2025-04-16 13:32) Added `FieldSuggestion` component to display individual field-specific AI suggestions
+- (2025-04-16 13:32) Enhanced `testFormSubmission.js` to test the complete n8n webhook response flow with AI validation
 - (2025-04-16 11:57) Created dedicated `/tests` directory for all test scripts and assets
 - (2025-04-16 11:57) Added React test for AI validation UI (`tests/TeacherForm.AISuggestions.test.tsx`)
 - (2025-04-16 11:57) Created `n8n-interactions.md` documenting all webhook interactions
@@ -20,6 +23,10 @@ NOTE: Update this timestamp whenever the document is updated.
 - (2025-04-15 19:35) Added `docs/instructions.md` with quick reference for common project tasks (start/stop server, git backup, refactoring tips, etc).
 
 ### Changed
+- (2025-04-16 13:44) Restructured MemoView to display both the original teacher report and the AI-generated memo
+- (2025-04-16 13:44) Added section headers to clearly distinguish between original report and parent-friendly memo
+- (2025-04-16 13:32) Updated `InjuryDetailsSection` to display field-specific AI suggestions
+- (2025-04-16 13:32) Modified mock validation in `api.ts` to include suggestions for all three main fields
 - (2025-04-16 11:57) Moved all test scripts from `src/utils/` to the dedicated `/tests` directory
 - (2025-04-16 11:26) Updated the InjuryReport type definition to include AI validation fields
 - (2025-04-16 11:26) Modified form submission to track AI validation metrics
@@ -28,6 +35,8 @@ NOTE: Update this timestamp whenever the document is updated.
 - (2025-04-15 19:41) Updated `FormActions` prop types to strictly require event parameter for `onSubmit` and `onReevaluate`, resolving TypeScript errors in `TeacherForm.tsx`.
 
 ### Fixed
+- (2025-04-16 13:44) Improved front desk user experience by showing both original report and AI-generated memo
+- (2025-04-16 13:32) Fixed missing field-specific AI suggestion display in the UI
 - (2025-04-16 11:26) Fixed "Submit as is" functionality to properly write to Supabase database
 - (2025-04-16 11:26) Fixed TypeScript errors related to null vs. undefined in optional fields
 - (2025-04-16 10:28) Fixed TypeScript errors related to property names and type definitions in the refactored components

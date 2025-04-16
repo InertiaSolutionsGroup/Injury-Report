@@ -47,6 +47,9 @@ const TeacherForm: React.FC = () => {
             injuryDescription={formData.injuryDescription}
             actionTaken={formData.actionTaken}
             onChange={handleInputChange}
+            validationResponse={showSuggestions ? validationResponse : null}
+            acceptedSuggestions={acceptedSuggestions}
+            onAcceptSuggestion={handleAcceptSuggestion}
           />
           
           {/* Additional Information Section */}

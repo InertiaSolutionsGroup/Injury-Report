@@ -25,6 +25,7 @@ export type User = {
 export type InjuryReport = {
   id: string;
   child_id: string;
+  child_name?: string;
   submitting_user_id: string;
   injury_timestamp: string;
   location: string;
@@ -33,8 +34,10 @@ export type InjuryReport = {
   action_taken: string;
   is_bite: boolean;
   biter_child_id?: string;
+  biter_child_name?: string;
   is_peer_aggression: boolean;
   aggressor_child_id?: string;
+  aggressor_child_name?: string;
   memo_content?: string;
   is_reviewed: boolean;
   reviewed_by_user_id?: string;

@@ -159,8 +159,21 @@ export const useInjuryForm = (): UseInjuryFormReturn => {
       // Prepare data for validation
       const injuryTimestamp = new Date(`${formData.date}T${formData.time}`).toISOString();
       
+      // Find the selected child to get their name
+      const selectedChild = children.find(child => child.id === formData.childId);
+      const childName = selectedChild ? selectedChild.name : '';
+      
+      // Find biter child name if applicable
+      const biterChild = formData.isBite ? children.find(child => child.id === formData.biterChildId) : null;
+      const biterChildName = biterChild ? biterChild.name : '';
+      
+      // Find aggressor child name if applicable
+      const aggressorChild = formData.isPeerAggression ? children.find(child => child.id === formData.aggressorChildId) : null;
+      const aggressorChildName = aggressorChild ? aggressorChild.name : '';
+      
       const reportData = {
         child_id: formData.childId,
+        child_name: childName,
         injury_timestamp: injuryTimestamp,
         location: formData.location,
         submitting_user_id: formData.submittingUserId,
@@ -169,8 +182,10 @@ export const useInjuryForm = (): UseInjuryFormReturn => {
         action_taken: formData.actionTaken,
         is_bite: formData.isBite,
         biter_child_id: formData.isBite && formData.biterChildId ? formData.biterChildId : undefined,
+        biter_child_name: formData.isBite ? biterChildName : undefined,
         is_peer_aggression: formData.isPeerAggression,
         aggressor_child_id: formData.isPeerAggression && formData.aggressorChildId ? formData.aggressorChildId : undefined,
+        aggressor_child_name: formData.isPeerAggression ? aggressorChildName : undefined,
       };
       
       const response = await validateInjuryReport(reportData);

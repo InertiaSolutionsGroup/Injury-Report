@@ -1,8 +1,3 @@
-<!--
-Last updated: 2025-04-16 17:30 EDT
-NOTE: Update this timestamp whenever the document is updated.
--->
-
 # Injury Reporting / Boo-Boo Report Application
 
 This application provides a web-based solution for documenting and managing child injuries within a childcare center. It streamlines the process of creating, validating, and reviewing injury reports with AI assistance.
@@ -13,6 +8,7 @@ This application provides a web-based solution for documenting and managing chil
 - **Front Desk View**: Enables front desk staff to view submitted reports and track their status
 - **Memo Generation**: Automatically generates professional, parent-friendly "Boo-Boo Report" memos
 - **Status Management**: Tracks review and delivery status of each report
+- **Testing Infrastructure**: Comprehensive test harness for evaluating AI responses to different scenarios
 
 ## Technology Stack
 
@@ -40,8 +36,9 @@ This application provides a web-based solution for documenting and managing chil
    ```
    REACT_APP_SUPABASE_URL=your-supabase-project-url
    REACT_APP_SUPABASE_ANON_KEY=your-supabase-anon-key
-   REACT_APP_VALIDATION_WEBHOOK_URL=your-n8n-validation-webhook-url
+   REACT_APP_INJURY_REPORT_IMPROVER_WEBHOOK_URL=your-n8n-validation-webhook-url
    REACT_APP_MEMO_GENERATION_WEBHOOK_URL=your-n8n-memo-generation-webhook-url
+   REACT_APP_MOCK_AI_VALIDATION=false
    ```
 4. Set up the Supabase database by executing the SQL script in `supabase/schema.sql`
 5. Populate sample data for `Children` and `Users` tables via the Supabase UI
@@ -53,6 +50,19 @@ npm start
 ```
 
 This runs the app in development mode. Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+
+### Testing the AI Integration
+
+The application includes a comprehensive testing infrastructure to evaluate how the AI handles different real-world scenarios:
+
+1. Start the application with `npm start`
+2. Navigate to the test page at `http://localhost:3000/test`
+3. Select a test scenario from the dropdown
+4. Choose whether to use the real API or mock data
+5. Submit the form to see the AI's response
+6. Evaluate the suggestions and parent narrative
+
+For more details on the testing infrastructure, see the [Test README](./tests/README.md).
 
 ### Building for Production
 
@@ -68,7 +78,9 @@ The application follows this general workflow:
 
 1. **Teacher Form Submission**:
    - Teacher fills out injury report details
-   - Form data is validated (locally and optionally via AI)
+   - Form data is validated (locally and via AI)
+   - AI provides suggestions for improvement
+   - Teacher accepts or rejects suggestions
    - Report is submitted to Supabase database
 
 2. **Front Desk Review**:
@@ -76,7 +88,7 @@ The application follows this general workflow:
    - AI generates a parent-friendly memo for each report
    - Front desk staff marks reports as reviewed/delivered
 
-For a detailed breakdown of each component and its current implementation status, see [WORKFLOW.md](./WORKFLOW.md).
+For a detailed breakdown of each component and its current implementation status, see [docs/WORKFLOW.md](./docs/WORKFLOW.md).
 
 ## Component Status Summary
 
@@ -89,43 +101,21 @@ For a detailed breakdown of each component and its current implementation status
 | **AI Memo Generation** | ⚠️ IN PROGRESS | n8n webhook partially implemented |
 | **Testing Infrastructure** | ✅ FUNCTIONAL | Comprehensive test harness available at /test |
 
-## Database Schema
-
-The application uses three main tables:
-- `Children`: Stores information about children
-- `Users`: Stores information about teachers and front desk staff
-- `InjuryReports`: Stores all injury report data including status tracking
-
 ## Documentation Index
 
-- **Workflows and Setup**
-  - [WORKFLOW.md](./WORKFLOW.md): Detailed workflow and component status documentation
-  - [DATABASE_SCHEMA.md](./DATABASE_SCHEMA.md): Comprehensive database schema documentation
-  - [n8n-workflow-setup.md](./n8n-workflow-setup.md): Setup guide for n8n workflows
-  - [n8n-interactions.md](./n8n-interactions.md): Documentation of API interactions with n8n
-- **Development and Testing**
-  - [instructions.md](./instructions.md): Quick reference for common developer tasks
-  - [LLM_HANDOFF.md](./LLM_HANDOFF.md): Handoff guide for LLMs and developers
-  - [../tests/README.md](../tests/README.md): Testing infrastructure documentation
-- **Project Management**
-  - [CHANGELOG.md](./CHANGELOG.md): Chronological list of all project changes
-  - [ENVIRONMENT.md](./ENVIRONMENT.md): Environment variable and API key setup
-
-## How to Use
-- Start here if you are new to the project or returning after a break
-- Check [WORKFLOW.md](./WORKFLOW.md) for detailed component status
-- Always check [LLM_HANDOFF.md](./LLM_HANDOFF.md) for current status and next steps
-- For setup and running instructions, see the Setup Instructions section above
+- [docs/WORKFLOW.md](./docs/WORKFLOW.md): Detailed workflow and component status documentation
+- [docs/DATABASE_SCHEMA.md](./docs/DATABASE_SCHEMA.md): Comprehensive database schema documentation
+- [docs/n8n-workflow-setup.md](./docs/n8n-workflow-setup.md): Setup guide for n8n workflows
+- [docs/n8n-interactions.md](./docs/n8n-interactions.md): Documentation of API interactions with n8n
+- [tests/README.md](./tests/README.md): Testing infrastructure documentation
+- [docs/LLM_HANDOFF.md](./docs/LLM_HANDOFF.md): Handoff guide for LLMs and developers
 
 ## Development Notes
 
 - The application is designed to work even when n8n webhooks are not available
-- "Submit as is" functionality writes directly to Supabase, bypassing n8n validation
-- Error handling is implemented to gracefully handle missing dependencies
-- Privacy protection is implemented to filter sensitive information (like other children's names) before sending to AI
-- A comprehensive testing infrastructure is available at `/test` to evaluate AI responses to different scenarios
 - Mock API functionality allows testing without a live n8n instance
+- Privacy protection is implemented to ensure sensitive information (like other children's names) is not shared with the AI or included in parent communications
 
 ---
 
-If you have questions or need to update documentation, please keep all docs in this folder and update the index as needed.
+Last updated: 2025-04-16

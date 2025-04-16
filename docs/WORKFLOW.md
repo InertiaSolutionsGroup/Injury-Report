@@ -1,5 +1,5 @@
 <!--
-Last updated: 2025-04-16 10:52 EDT
+Last updated: 2025-04-16 13:32 EDT
 NOTE: Update this timestamp whenever the document is updated.
 -->
 
@@ -47,7 +47,9 @@ The Injury Reporting App follows this general workflow:
 | **AdditionalInfoSection** | Bite and peer aggression options | ✅ FUNCTIONAL | N/A |
 | **ValidationError** | Error display with retry options | ✅ FUNCTIONAL | N/A |
 | **FormActions** | Form submission and clear buttons | ✅ FUNCTIONAL | N/A |
-| **AI Validation** | Suggestions for improving report quality | ⚠️ STUBBED | n8n webhook |
+| **FieldSuggestion** | Display for individual field suggestions | ✅ FUNCTIONAL | N/A |
+| **SuggestionPanel** | Panel for accepting all suggestions | ✅ FUNCTIONAL | N/A |
+| **AI Validation** | Suggestions for improving report quality | ✅ FUNCTIONAL (MOCK) | n8n webhook |
 
 ### 2.3 Front Desk Components
 
@@ -56,6 +58,7 @@ The Injury Reporting App follows this general workflow:
 | **MemoView** | Main memo display component | ✅ FUNCTIONAL | All subcomponents below |
 | **useInjuryReport Hook** | State management for report data | ✅ FUNCTIONAL | Supabase connection |
 | **MemoHeader** | Report header with status and actions | ✅ FUNCTIONAL | N/A |
+| **OriginalReportSection** | Display of original teacher submission | ✅ FUNCTIONAL | N/A |
 | **MemoContainer** | Memo content with loading/error states | ✅ FUNCTIONAL | N/A |
 | **MemoContent** | Formatted memo display | ✅ FUNCTIONAL | N/A |
 | **ReviewModal** | Modal for marking reports as reviewed | ✅ FUNCTIONAL | Supabase connection |
@@ -71,7 +74,7 @@ START
   ↓
 [Fill Form]
   ↓
-[Submit for Validation] → [AI Validation] → [Show Suggestions]
+[Submit for Validation] → [AI Validation] → [Show Field Suggestions]
   ↓                        ↑                   ↓
 [Error?] → Yes → [Show Error] → [Retry?] → Yes → [Retry Validation]
   ↓                              ↓
@@ -88,7 +91,8 @@ END
 
 **Current Status:**
 - Local form validation: ✅ FUNCTIONAL
-- AI validation via n8n: ⚠️ STUBBED (shows error when attempted)
+- AI validation via n8n: ✅ FUNCTIONAL (MOCK MODE)
+- Field-specific suggestion display: ✅ FUNCTIONAL
 - Direct submission to Supabase: ✅ FUNCTIONAL
 - Error handling: ✅ FUNCTIONAL
 
@@ -103,7 +107,8 @@ START
   ↓
 [Load Report Data] → [Generate Memo]
   ↓                    ↓
-[Display Report]     [Display Memo]
+[Display Original   [Display Parent-
+ Teacher Report]     Friendly Memo]
   ↓                    ↓
 [Mark as Reviewed] ← ─ ┘
   ↓
@@ -115,6 +120,7 @@ END
 **Current Status:**
 - Report listing and selection: ✅ FUNCTIONAL
 - Report data loading: ✅ FUNCTIONAL
+- Original teacher report display: ✅ FUNCTIONAL
 - Memo generation via n8n: ⚠️ STUBBED (falls back to existing memo content)
 - Review/delivery marking: ✅ FUNCTIONAL
 
@@ -165,24 +171,38 @@ The application code has been updated to use these fields when submitting injury
 
 ### 4.2 n8n Integration
 
-The application is designed to integrate with n8n workflows for AI validation and memo generation. These integrations are currently stubbed out and will show appropriate error messages when attempted.
+The application is designed to integrate with n8n workflows for AI validation and memo generation. These integrations can be tested using mock mode without requiring an actual n8n instance.
 
 The n8n webhook URLs are configured in the `.env` file:
 ```
 REACT_APP_VALIDATION_WEBHOOK_URL=https://n8n-instance.example.com/webhook/validation
 REACT_APP_MEMO_GENERATION_WEBHOOK_URL=https://n8n-instance.example.com/webhook/memo-generation
+REACT_APP_MOCK_AI_VALIDATION=true
 ```
 
 When these n8n workflows are implemented, they should be configured to:
 1. **Validation Webhook**: Accept injury report data, analyze it, and return suggestions for improvement
 2. **Memo Generation Webhook**: Accept injury report data and generate a parent-friendly memo
 
-### 4.3 Error Handling Strategy
+#### 4.2.1 Testing the n8n Integration
 
-The application implements a graceful degradation strategy:
+Two methods are available for testing the n8n integration:
 
-1. **Form Validation**: If AI validation fails, users can still submit reports directly
-2. **Memo Generation**: If AI memo generation fails, the system uses existing memo content or a fallback template
+1. **Manual Testing**: Use the browser interface to test the complete user flow:
+   - Fill out the form and submit for validation
+   - View and interact with field-specific suggestions
+   - Accept individual or all suggestions
+   - Submit the final report
+
+2. **Automated Testing**: Run the test script to simulate the complete flow:
+   ```
+   node tests/testFormSubmission.js
+   ```
+   This script will:
+   - Create a test injury report
+   - Simulate the AI validation process
+   - Apply suggestions to the report
+   - Submit the final report to Supabase with proper tracking fields
 
 ## 5. Future Enhancements
 

@@ -1,6 +1,7 @@
 // Moved from src/utils/testFormSubmission.js
 // Automated test script for injury report form submission
 const { createClient } = require('@supabase/supabase-js');
+const axios = require('axios');
 require('dotenv').config();
 
 // Get Supabase credentials from environment variables
@@ -58,9 +59,68 @@ async function fetchTestData() {
   }
 }
 
-// Function to simulate form submission
-async function simulateFormSubmission(testData) {
-  console.log('\nSimulating form submission...');
+// Function to simulate AI validation webhook call
+async function simulateAIValidation(reportData) {
+  console.log('\nSimulating AI validation webhook call...');
+  
+  try {
+    // If mock validation is enabled, return mock suggestions directly
+    if (process.env.REACT_APP_MOCK_AI_VALIDATION === 'true') {
+      console.log('Using mock AI validation response');
+      
+      return {
+        status: 'success',
+        suggestions: [
+          {
+            field: 'incident_description',
+            original: reportData.incident_description,
+            suggestion: 'Test Suggestion: Include details about what the child was doing immediately before the incident occurred.',
+            reason: 'Test Reason: Provides important context for understanding how the injury happened.'
+          },
+          {
+            field: 'injury_description',
+            original: reportData.injury_description,
+            suggestion: 'Test Suggestion: Consider adding details about the exact location and appearance of the injury.',
+            reason: 'Test Reason: Enhances clarity for parents and staff.'
+          },
+          {
+            field: 'action_taken',
+            original: reportData.action_taken,
+            suggestion: 'Test Suggestion: Specify the type of first aid administered (e.g., cleaned with antiseptic, applied bandage).',
+            reason: 'Test Reason: Provides a clearer record of care.'
+          }
+        ]
+      };
+    }
+    
+    // Otherwise, try to call the actual validation webhook
+    const validationWebhookUrl = process.env.REACT_APP_VALIDATION_WEBHOOK_URL;
+    
+    if (!validationWebhookUrl) {
+      throw new Error('Validation webhook URL not configured');
+    }
+    
+    console.log('Calling validation webhook:', validationWebhookUrl);
+    const response = await axios.post(validationWebhookUrl, reportData, {
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      timeout: 30000,
+    });
+    
+    return response.data;
+  } catch (error) {
+    console.error('AI validation failed:', error);
+    return {
+      status: 'error',
+      message: `Failed to connect to the validation service: ${error.message}`
+    };
+  }
+}
+
+// Function to simulate form submission with AI validation
+async function simulateFormSubmissionWithValidation(testData) {
+  console.log('\nSimulating form submission with AI validation...');
   
   try {
     // Create a timestamp for the current time
@@ -76,23 +136,59 @@ async function simulateFormSubmission(testData) {
       location: 'Playground',
       incident_description: 'Automated test: Child fell while playing',
       injury_description: 'Automated test: Small scrape on knee',
-      action_taken: 'Automated test: Cleaned with antiseptic wipe and applied bandage',
+      action_taken: 'Automated test: Cleaned with antiseptic wipe',
       is_bite: false,
       is_peer_aggression: false,
       is_reviewed: false,
-      is_delivered_to_parent: false,
-      // Include AI validation fields
-      ai_validated: false,
-      ai_suggestions_count: 0,
-      ai_suggestions_accepted: 0
+      is_delivered_to_parent: false
     };
     
-    console.log('Test report data:', reportData);
+    console.log('Test report data for validation:', reportData);
     
-    // Submit to Supabase
+    // Step 1: Call AI validation
+    const validationResponse = await simulateAIValidation(reportData);
+    console.log('AI validation response:', validationResponse);
+    
+    // Step 2: Apply suggestions (simulating user accepting all suggestions)
+    let aiValidated = false;
+    let aiSuggestionsCount = 0;
+    let aiSuggestionsAccepted = 0;
+    
+    if (validationResponse.status === 'success' && validationResponse.suggestions) {
+      aiValidated = true;
+      aiSuggestionsCount = validationResponse.suggestions.length;
+      aiSuggestionsAccepted = validationResponse.suggestions.length; // Assume all accepted
+      
+      // Apply suggestions to report data
+      validationResponse.suggestions.forEach(suggestion => {
+        const fieldMap = {
+          'incident_description': 'incident_description',
+          'injury_description': 'injury_description',
+          'action_taken': 'action_taken'
+        };
+        
+        const field = fieldMap[suggestion.field];
+        if (field) {
+          reportData[field] = suggestion.suggestion;
+        }
+      });
+      
+      console.log('Report data after applying suggestions:', reportData);
+    }
+    
+    // Step 3: Submit to Supabase
+    const finalReportData = {
+      ...reportData,
+      ai_validated: aiValidated,
+      ai_suggestions_count: aiSuggestionsCount,
+      ai_suggestions_accepted: aiSuggestionsAccepted
+    };
+    
+    console.log('Final report data for submission:', finalReportData);
+    
     const { data, error } = await supabase
       .from('InjuryReports')
-      .insert(reportData)
+      .insert(finalReportData)
       .select();
     
     if (error) {
@@ -104,7 +200,8 @@ async function simulateFormSubmission(testData) {
     
     return {
       success: true,
-      data
+      data,
+      validationResponse
     };
   } catch (error) {
     console.error('Form submission failed:', error);
@@ -142,7 +239,7 @@ async function cleanupTestData(reportId) {
 
 // Run the test
 async function runTest() {
-  console.log('Starting automated form submission test...');
+  console.log('Starting automated form submission test with AI validation...');
   
   try {
     // Step 1: Fetch test data
@@ -154,11 +251,13 @@ async function runTest() {
       teacherId: testData.teacher.id
     });
     
-    // Step 2: Simulate form submission
-    const result = await simulateFormSubmission(testData);
+    // Step 2: Simulate form submission with AI validation
+    const result = await simulateFormSubmissionWithValidation(testData);
     
     if (result.success) {
-      console.log('\n✅ TEST PASSED: Form submission successful');
+      console.log('\n✅ TEST PASSED: Form submission with AI validation successful');
+      console.log('Validation status:', result.validationResponse?.status);
+      console.log('Number of suggestions:', result.validationResponse?.suggestions?.length || 0);
       
       // Step 3: Clean up (optional - comment out if you want to keep the test data)
       // if (result.data && result.data[0] && result.data[0].id) {

@@ -1,5 +1,5 @@
 <!--
-Last updated: 2025-04-15 20:26 EDT
+Last updated: 2025-04-16 10:58 EDT
 NOTE: Update this timestamp whenever the document is updated.
 -->
 
@@ -27,7 +27,7 @@ This application provides a web-based solution for documenting and managing chil
 
 - Node.js and npm installed
 - Supabase project created
-- n8n instance with configured workflows for validation and memo generation
+- n8n instance with configured workflows for validation and memo generation (optional for development)
 
 ### Configuration
 
@@ -64,12 +64,29 @@ This builds the app for production to the `build` folder.
 
 ## Application Flow
 
-1. **Teacher**: Selects their name, fills out injury details, and submits for AI validation
-2. **AI Validation**: Provides suggestions for improving the report quality
-3. **Teacher**: Accepts suggestions or edits manually before final submission
-4. **Front Desk**: Views submitted reports and selects one to review
-5. **AI Memo Generation**: Creates a polished memo summarizing the incident
-6. **Front Desk**: Reviews the memo and marks it as reviewed/delivered to parents
+The application follows this general workflow:
+
+1. **Teacher Form Submission**:
+   - Teacher fills out injury report details
+   - Form data is validated (locally and optionally via AI)
+   - Report is submitted to Supabase database
+
+2. **Front Desk Review**:
+   - Front desk staff views submitted reports
+   - AI generates a parent-friendly memo for each report
+   - Front desk staff marks reports as reviewed/delivered
+
+For a detailed breakdown of each component and its current implementation status, see [WORKFLOW.md](./WORKFLOW.md).
+
+## Component Status Summary
+
+| Component | Status | Notes |
+|-----------|--------|-------|
+| **Supabase Integration** | ✅ FUNCTIONAL | Reading and writing to database works |
+| **Teacher Form** | ✅ FUNCTIONAL | All form fields and validation working |
+| **Front Desk View** | ✅ FUNCTIONAL | Report listing and viewing works |
+| **AI Validation** | ⚠️ STUBBED | n8n webhook not yet implemented |
+| **AI Memo Generation** | ⚠️ STUBBED | n8n webhook not yet implemented |
 
 ## Database Schema
 
@@ -80,15 +97,24 @@ The application uses three main tables:
 
 ## Documentation Index
 
-- [instructions.md](./instructions.md): Quick reference for common developer tasks (start/stop server, testing, refactoring, etc.)
-- [LLM_HANDOFF.md](./LLM_HANDOFF.md): Handoff guide for LLMs and developers—always update before switching sessions
+- [WORKFLOW.md](./WORKFLOW.md): Detailed workflow and component status documentation
+- [DATABASE_SCHEMA.md](./DATABASE_SCHEMA.md): Comprehensive database schema documentation
+- [instructions.md](./instructions.md): Quick reference for common developer tasks
+- [LLM_HANDOFF.md](./LLM_HANDOFF.md): Handoff guide for LLMs and developers
 - [CHANGELOG.md](./CHANGELOG.md): Chronological list of all project changes
 - [ENVIRONMENT.md](./ENVIRONMENT.md): Environment variable and API key setup
 
 ## How to Use
 - Start here if you are new to the project or returning after a break
-- Always check `LLM_HANDOFF.md` for current status and next steps
+- Check [WORKFLOW.md](./WORKFLOW.md) for detailed component status
+- Always check [LLM_HANDOFF.md](./LLM_HANDOFF.md) for current status and next steps
 - For setup and running instructions, see the Setup Instructions section above
+
+## Development Notes
+
+- The application is designed to work even when n8n webhooks are not available
+- "Submit as is" functionality writes directly to Supabase, bypassing n8n validation
+- Error handling is implemented to gracefully handle missing dependencies
 
 ---
 

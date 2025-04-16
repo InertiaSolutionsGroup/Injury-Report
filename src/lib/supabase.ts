@@ -42,6 +42,9 @@ export type InjuryReport = {
   is_delivered_to_parent: boolean;
   delivered_by_user_id?: string;
   delivered_timestamp?: string;
+  ai_validated: boolean;
+  ai_suggestions_count: number;
+  ai_suggestions_accepted: number;
   created_at: string;
   updated_at: string;
   

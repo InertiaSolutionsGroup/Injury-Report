@@ -1,9 +1,19 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react';
-import App from './App';
+import TeacherForm from './components/TeacherForm';
+import MemoView from './components/MemoView';
 
-test('renders learn react link', () => {
-  render(<App />);
-  const linkElement = screen.getByText(/learn react/i);
-  expect(linkElement).toBeInTheDocument();
+describe('TeacherForm', () => {
+  it('renders without crashing', () => {
+    render(<TeacherForm />);
+    expect(screen.getByText(/submit for review/i)).toBeInTheDocument();
+  });
+});
+
+describe('MemoView', () => {
+  it('renders without crashing', () => {
+    render(<MemoView />);
+    // MemoView may require route params; this checks for a fallback string
+    expect(screen.getByText(/memo/i)).toBeTruthy();
+  });
 });

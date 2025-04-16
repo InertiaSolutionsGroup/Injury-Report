@@ -11,6 +11,9 @@ import {
   markReportAsDelivered 
 } from '../lib/supabase';
 import { generateMemo, MemoGenerationResponse } from '../lib/api';
+import ReviewModal from './memo/ReviewModal';
+import DeliverModal from './memo/DeliverModal';
+import MemoContent from './memo/MemoContent';
 
 const MemoView: React.FC = () => {
   const { reportId } = useParams<{ reportId: string }>();
@@ -177,151 +180,6 @@ const MemoView: React.FC = () => {
     if (!report || !report.delivered_by_user_id) return 'N/A';
     const name = report.delivered_by && typeof report.delivered_by === 'object' && 'name' in report.delivered_by ? (report.delivered_by as any).name : null;
     return name || 'name not retrieved';
-  };
-  
-  // Render action modals
-  const renderReviewModal = () => {
-    if (!showReviewModal) return null;
-    
-    return (
-      <div className="fixed z-10 inset-0 overflow-y-auto">
-        <div className="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-          <div className="fixed inset-0 transition-opacity" aria-hidden="true">
-            <div className="absolute inset-0 bg-gray-500 opacity-75"></div>
-          </div>
-          
-          <span className="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
-          
-          <div className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
-            <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
-              <div className="sm:flex sm:items-start">
-                <div className="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
-                  <h3 className="text-lg leading-6 font-medium text-gray-900">Mark as Reviewed</h3>
-                  <div className="mt-2">
-                    <p className="text-sm text-gray-500">
-                      Please select your name to mark this report as reviewed.
-                    </p>
-                    
-                    <div className="mt-4">
-                      <label htmlFor="reviewerUser" className="block text-sm font-medium text-gray-700">
-                        Your Name
-                      </label>
-                      <select
-                        id="reviewerUser"
-                        name="reviewerUser"
-                        className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"
-                        value={selectedUserId}
-                        onChange={handleUserSelect}
-                      >
-                        <option value="">Select your name</option>
-                        {frontDeskUsers.map(user => (
-                          <option key={user.id} value={user.id}>{user.name}</option>
-                        ))}
-                      </select>
-                    </div>
-                    
-                    {actionError && (
-                      <div className="mt-2 text-sm text-red-600">
-                        {actionError}
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div className="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
-              <button
-                type="button"
-                onClick={handleMarkAsReviewed}
-                disabled={!selectedUserId || isSubmittingAction}
-                className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-indigo-600 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:ml-3 sm:w-auto sm:text-sm"
-              >
-                {isSubmittingAction ? 'Processing...' : 'Confirm'}
-              </button>
-              <button
-                type="button"
-                onClick={() => setShowReviewModal(false)}
-                className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  };
-  
-  const renderDeliverModal = () => {
-    if (!showDeliverModal) return null;
-    
-    return (
-      <div className="fixed z-10 inset-0 overflow-y-auto">
-        <div className="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-          <div className="fixed inset-0 transition-opacity" aria-hidden="true">
-            <div className="absolute inset-0 bg-gray-500 opacity-75"></div>
-          </div>
-          
-          <span className="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
-          
-          <div className="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
-            <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
-              <div className="sm:flex sm:items-start">
-                <div className="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
-                  <h3 className="text-lg leading-6 font-medium text-gray-900">Mark as Delivered to Parent</h3>
-                  <div className="mt-2">
-                    <p className="text-sm text-gray-500">
-                      Please select your name to mark this report as delivered to the parent.
-                    </p>
-                    
-                    <div className="mt-4">
-                      <label htmlFor="delivererUser" className="block text-sm font-medium text-gray-700">
-                        Your Name
-                      </label>
-                      <select
-                        id="delivererUser"
-                        name="delivererUser"
-                        className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"
-                        value={selectedUserId}
-                        onChange={handleUserSelect}
-                      >
-                        <option value="">Select your name</option>
-                        {frontDeskUsers.map(user => (
-                          <option key={user.id} value={user.id}>{user.name}</option>
-                        ))}
-                      </select>
-                    </div>
-                    
-                    {actionError && (
-                      <div className="mt-2 text-sm text-red-600">
-                        {actionError}
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div className="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
-              <button
-                type="button"
-                onClick={handleMarkAsDelivered}
-                disabled={!selectedUserId || isSubmittingAction}
-                className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-indigo-600 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:ml-3 sm:w-auto sm:text-sm"
-              >
-                {isSubmittingAction ? 'Processing...' : 'Confirm'}
-              </button>
-              <button
-                type="button"
-                onClick={() => setShowDeliverModal(false)}
-                className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
   };
   
   if (isLoading) {
@@ -499,9 +357,7 @@ const MemoView: React.FC = () => {
               </div>
             </div>
           ) : memo ? (
-            <div className="prose max-w-none">
-              <ReactMarkdown>{memo}</ReactMarkdown>
-            </div>
+            <MemoContent content={memo} />
           ) : (
             <p className="text-gray-500 italic">No memo content available.</p>
           )}
@@ -509,8 +365,26 @@ const MemoView: React.FC = () => {
       </div>
       
       {/* Modals */}
-      {renderReviewModal()}
-      {renderDeliverModal()}
+      <ReviewModal
+        isOpen={showReviewModal}
+        onClose={() => setShowReviewModal(false)}
+        onConfirm={handleMarkAsReviewed}
+        isLoading={isSubmittingAction}
+        users={frontDeskUsers}
+        selectedUserId={selectedUserId}
+        onChange={handleUserSelect}
+        error={actionError}
+      />
+      <DeliverModal
+        isOpen={showDeliverModal}
+        onClose={() => setShowDeliverModal(false)}
+        onConfirm={handleMarkAsDelivered}
+        isLoading={isSubmittingAction}
+        users={frontDeskUsers}
+        selectedUserId={selectedUserId}
+        onChange={handleUserSelect}
+        error={actionError}
+      />
     </div>
   );
 };

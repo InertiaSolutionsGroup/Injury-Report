@@ -2,6 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { format } from 'date-fns';
 import { Child, User, fetchChildren, fetchUsers, createInjuryReport } from '../lib/supabase';
 import { validateInjuryReport, ValidationResponse } from '../lib/api';
+import ChildSelector from './teacher/ChildSelector';
+import AggressorSelector from './teacher/AggressorSelector';
+import BiterSelector from './teacher/BiterSelector';
+import SuggestionPanel from './teacher/SuggestionPanel';
+import FormActions from './teacher/FormActions';
 
 const TeacherForm: React.FC = () => {
   // Form state
@@ -257,44 +262,6 @@ const TeacherForm: React.FC = () => {
     }
   };
   
-  // Render suggestion component for a field
-  const renderSuggestion = (field: string, label: string) => {
-    if (!validationResponse?.suggestions) return null;
-    
-    const suggestion = validationResponse.suggestions.find(s => s.field === field);
-    if (!suggestion) return null;
-    
-    const isAccepted = acceptedSuggestions[field];
-    
-    return (
-      <div className="mt-2 p-4 bg-yellow-50 border border-yellow-200 rounded-md">
-        <h4 className="font-medium text-yellow-800">Suggestion for {label}</h4>
-        <div className="mt-2 grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <h5 className="text-sm font-medium text-gray-500">Original</h5>
-            <p className="mt-1 text-sm text-gray-800">{suggestion.original}</p>
-          </div>
-          <div>
-            <h5 className="text-sm font-medium text-gray-500">Suggested</h5>
-            <p className="mt-1 text-sm text-gray-800">{suggestion.suggestion}</p>
-          </div>
-        </div>
-        <p className="mt-2 text-sm text-gray-600">
-          <strong>Reason:</strong> {suggestion.reason}
-        </p>
-        {!isAccepted && (
-          <button
-            type="button"
-            onClick={() => handleAcceptSuggestion(field)}
-            className="mt-2 inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-          >
-            Accept Suggestion
-          </button>
-        )}
-      </div>
-    );
-  };
-  
   return (
     <div className="bg-white shadow overflow-hidden sm:rounded-lg">
       <div className="px-4 py-5 sm:px-6">
@@ -309,24 +276,15 @@ const TeacherForm: React.FC = () => {
           {/* Child and Date/Time Information */}
           <div className="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
             <div className="sm:col-span-3">
-              <label htmlFor="childId" className="block text-sm font-medium text-gray-700">
-                Child's Name *
-              </label>
-              <div className="mt-1">
-                <select
-                  id="childId"
-                  name="childId"
-                  value={formData.childId}
-                  onChange={handleInputChange}
-                  className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
-                  required
-                >
-                  <option value="">Select a child</option>
-                  {children.map(child => (
-                    <option key={child.id} value={child.id}>{child.name}</option>
-                  ))}
-                </select>
-              </div>
+              <ChildSelector
+                value={formData.childId}
+                onChange={handleInputChange}
+                childrenList={children}
+                required={true}
+                label="Child Name *"
+                id="childId"
+                name="childId"
+              />
             </div>
             
             <div className="sm:col-span-2">
@@ -421,7 +379,6 @@ const TeacherForm: React.FC = () => {
                   required
                 />
               </div>
-              {renderSuggestion('incident_description', 'Incident Description')}
             </div>
             
             <div className="sm:col-span-6">
@@ -442,7 +399,6 @@ const TeacherForm: React.FC = () => {
                   required
                 />
               </div>
-              {renderSuggestion('injury_description', 'Injury Description')}
             </div>
             
             <div className="sm:col-span-6">
@@ -462,7 +418,6 @@ const TeacherForm: React.FC = () => {
                   required
                 />
               </div>
-              {renderSuggestion('action_taken', 'Action Taken')}
             </div>
           </div>
           
@@ -487,24 +442,12 @@ const TeacherForm: React.FC = () => {
             
             {formData.isBite && (
               <div className="ml-7">
-                <label htmlFor="biterChildId" className="block text-sm font-medium text-gray-700">
-                  Name of Child Who Bit *
-                </label>
-                <div className="mt-1">
-                  <select
-                    id="biterChildId"
-                    name="biterChildId"
-                    value={formData.biterChildId}
-                    onChange={handleInputChange}
-                    className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
-                    required={formData.isBite}
-                  >
-                    <option value="">Select a child</option>
-                    {children.map(child => (
-                      <option key={child.id} value={child.id}>{child.name}</option>
-                    ))}
-                  </select>
-                </div>
+                <BiterSelector
+                  value={formData.biterChildId}
+                  onChange={handleInputChange}
+                  childrenList={children}
+                  required={formData.isBite}
+                />
               </div>
             )}
             
@@ -527,27 +470,27 @@ const TeacherForm: React.FC = () => {
             
             {formData.isPeerAggression && (
               <div className="ml-7">
-                <label htmlFor="aggressorChildId" className="block text-sm font-medium text-gray-700">
-                  Name of Other Child Involved *
-                </label>
-                <div className="mt-1">
-                  <select
-                    id="aggressorChildId"
-                    name="aggressorChildId"
-                    value={formData.aggressorChildId}
-                    onChange={handleInputChange}
-                    className="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md"
-                    required={formData.isPeerAggression}
-                  >
-                    <option value="">Select a child</option>
-                    {children.map(child => (
-                      <option key={child.id} value={child.id}>{child.name}</option>
-                    ))}
-                  </select>
-                </div>
+                <AggressorSelector
+                  value={formData.aggressorChildId}
+                  onChange={handleInputChange}
+                  childrenList={children}
+                  required={formData.isPeerAggression}
+                />
               </div>
             )}
           </div>
+          
+          {/* Suggestion Panel */}
+          {showSuggestions && validationResponse && (
+            <SuggestionPanel
+              validationResponse={validationResponse}
+              acceptedSuggestions={acceptedSuggestions}
+              onAcceptSuggestion={handleAcceptSuggestion}
+              onAcceptAllSuggestions={handleAcceptAllSuggestions}
+              onFinalSubmit={handleFinalSubmit}
+              isSubmitting={isSubmitting}
+            />
+          )}
           
           {/* Validation Error */}
           {validationError && (
@@ -586,92 +529,32 @@ const TeacherForm: React.FC = () => {
             </div>
           )}
           
-          {/* Suggestions Summary */}
-          {showSuggestions && validationResponse?.suggestions && validationResponse.suggestions.length > 0 && (
-            <div className="mt-6 rounded-md bg-yellow-50 p-4">
-              <div className="flex">
-                <div className="flex-shrink-0">
-                  <svg className="h-5 w-5 text-yellow-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                    <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2h-1V9a1 1 0 00-1-1z" clipRule="evenodd" />
-                  </svg>
-                </div>
-                <div className="ml-3">
-                  <h3 className="text-sm font-medium text-yellow-800">AI has suggested improvements to your report</h3>
-                  <div className="mt-2 text-sm text-yellow-700">
-                    <p>Please review the suggestions above for each field and accept them if appropriate.</p>
-                  </div>
-                  <div className="mt-4">
-                    <div className="flex space-x-4">
-                      <button
-                        type="button"
-                        onClick={handleAcceptAllSuggestions}
-                        className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-                      >
-                        Accept All Suggestions
-                      </button>
-                      <button
-                        type="button"
-                        onClick={handleFinalSubmit}
-                        className="inline-flex items-center px-3 py-2 border border-gray-300 shadow-sm text-sm leading-4 font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-                      >
-                        Submit as is
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-          
           {/* Form Actions */}
-          <div className="mt-6 flex justify-end space-x-3">
-            <button
-              type="button"
-              onClick={() => {
-                setFormData({
-                  childId: '',
-                  date: format(new Date(), 'yyyy-MM-dd'),
-                  time: format(new Date(), 'HH:mm'),
-                  location: '',
-                  submittingUserId: '',
-                  incidentDescription: '',
-                  injuryDescription: '',
-                  actionTaken: '',
-                  isBite: false,
-                  biterChildId: '',
-                  isPeerAggression: false,
-                  aggressorChildId: '',
-                });
-                setValidationResponse(null);
-                setShowSuggestions(false);
-                setAcceptedSuggestions({});
-              }}
-              className="ml-3 inline-flex justify-center py-2 px-4 border border-gold shadow-sm text-sm font-medium rounded-md text-dark bg-gold hover:bg-primary hover:text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gold transition-colors duration-150 font-bold uppercase"
-            >
-              CLEAR FORM
-            </button>
-            
-            {!showSuggestions && (
-              <button
-                type="submit"
-                disabled={isSubmitting}
-                className="ml-3 inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-bold rounded-md text-white bg-primary hover:bg-secondary focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gold transition-colors duration-150 uppercase"
-              >
-                {isSubmitting ? 'PROCESSING...' : 'SUBMIT FOR REVIEW'}
-              </button>
-            )}
-            
-            {showSuggestions && (
-              <button
-                type="button"
-                onClick={handleSubmitForValidation}
-                disabled={isSubmitting}
-                className="ml-3 inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-bold rounded-md text-white bg-primary hover:bg-secondary focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gold transition-colors duration-150 uppercase"
-              >
-                {isSubmitting ? 'PROCESSING...' : 'RE-EVALUATE WITH AI'}
-              </button>
-            )}
-          </div>
+          <FormActions
+            onClear={() => {
+              setFormData({
+                childId: '',
+                date: format(new Date(), 'yyyy-MM-dd'),
+                time: format(new Date(), 'HH:mm'),
+                location: '',
+                submittingUserId: '',
+                incidentDescription: '',
+                injuryDescription: '',
+                actionTaken: '',
+                isBite: false,
+                biterChildId: '',
+                isPeerAggression: false,
+                aggressorChildId: '',
+              });
+              setValidationResponse(null);
+              setShowSuggestions(false);
+              setAcceptedSuggestions({});
+            }}
+            onSubmit={e => { e.preventDefault(); handleSubmitForValidation(e); }}
+            onReevaluate={e => { e.preventDefault(); handleSubmitForValidation(e); }}
+            showSuggestions={showSuggestions}
+            isSubmitting={isSubmitting}
+          />
         </form>
       </div>
     </div>

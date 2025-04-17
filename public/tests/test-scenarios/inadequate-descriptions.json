@@ -1,0 +1,19 @@
+{
+  "metadata": {
+    "name": "Inadequate Descriptions",
+    "description": "Very brief entries from an extremely busy teacher",
+    "created": "2025-04-17"
+  },
+  "formData": {
+    "child_id": "1",
+    "child_name": "Alex Smith",
+    "injury_time_eastern": "2025-04-17 11:30 AM EDT",
+    "location": "Playground",
+    "submitting_user_id": "101",
+    "incident_description": "bumped heads while playing",
+    "injury_description": "bump on forehead",
+    "action_taken": "ice pack and tlc",
+    "is_bite": false,
+    "is_peer_aggression": false
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "metadata": {
+    "name": "Adequate Descriptions",
+    "description": "Realistic entries with sufficient detail from a busy teacher",
+    "created": "2025-04-17"
+  },
+  "formData": {
+    "child_id": "1",
+    "child_name": "Alex Smith",
+    "injury_time_eastern": "2025-04-17 11:30 AM EDT",
+    "location": "Playground",
+    "submitting_user_id": "101",
+    "incident_description": "Alex bumped heads with Jayden while they were running around the climber. They didn't see each other coming around the corner and collided. Both were running pretty fast at the time.",
+    "injury_description": "Small red bump on his forehead, about the size of a quarter. No cut but slight swelling. He cried for about 2 minutes but calmed down quickly.",
+    "action_taken": "Applied ice pack for 5 mins and gave him lots of cuddles. Sat with him in the quiet corner until he felt ready to play again. Checked on him throughout outdoor time.",
+    "is_bite": false,
+    "is_peer_aggression": false
+  }
+}

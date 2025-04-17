@@ -1,0 +1,19 @@
+{
+  "metadata": {
+    "name": "Mixed Quality Descriptions",
+    "description": "Some detailed entries, some minimal from a teacher in a hurry",
+    "created": "2025-04-17"
+  },
+  "formData": {
+    "child_id": "1",
+    "child_name": "Alex Smith",
+    "injury_time_eastern": "2025-04-17 11:30 AM EDT",
+    "location": "Playground",
+    "submitting_user_id": "101",
+    "incident_description": "Alex and Jayden bumped heads while running around the climber. Didn't see eachother.",
+    "injury_description": "Small red bump on his forehead, about the size of a quarter. No cut but got a little swollen. Stopped crying after a couple mins.",
+    "action_taken": "ice pack and comfort",
+    "is_bite": false,
+    "is_peer_aggression": false
+  }
+}

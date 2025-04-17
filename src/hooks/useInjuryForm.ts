@@ -41,6 +41,10 @@ interface UseInjuryFormReturn {
   handleAcceptAllSuggestions: () => void;
   handleFinalSubmit: () => Promise<void>;
   resetForm: () => void;
+  // TEST-ONLY - REMOVE FOR PRODUCTION - Added 2025-04-17 16:30 EDT
+  // Exposing setFormData to allow direct state updates for testing
+  setFormData: React.Dispatch<React.SetStateAction<InjuryFormData>>;
+  // END TEST-ONLY
 }
 
 const initialFormData: InjuryFormData = {
@@ -121,27 +125,33 @@ export const useInjuryForm = (): UseInjuryFormReturn => {
   const validateForm = (): boolean => {
     // Required fields
     const requiredFields = [
-      'childId', 'date', 'time', 'location', 'submittingUserId',
-      'incidentDescription', 'injuryDescription', 'actionTaken'
+      { field: 'childId', label: 'Child' },
+      { field: 'date', label: 'Date' },
+      { field: 'time', label: 'Time' },
+      { field: 'location', label: 'Location' },
+      { field: 'submittingUserId', label: 'Submitting Teacher' },
+      { field: 'incidentDescription', label: 'Incident Description' },
+      { field: 'injuryDescription', label: 'Injury Description' },
+      { field: 'actionTaken', label: 'Action Taken' },
     ];
     
-    // Additional conditional required fields
+    // Check each required field
+    for (const { field, label } of requiredFields) {
+      if (!formData[field as keyof InjuryFormData]) {
+        alert(`Please fill in the ${label} field.`);
+        return false;
+      }
+    }
+    
+    // Check conditional required fields
     if (formData.isBite && !formData.biterChildId) {
-      alert('Please select the child who bit');
+      alert('Please select the biter child.');
       return false;
     }
     
     if (formData.isPeerAggression && !formData.aggressorChildId) {
-      alert('Please select the other child involved in peer aggression');
+      alert('Please select the aggressor child.');
       return false;
-    }
-    
-    // Check all required fields
-    for (const field of requiredFields) {
-      if (!formData[field as keyof typeof formData]) {
-        alert(`Please fill in all required fields`);
-        return false;
-      }
     }
     
     return true;
@@ -160,58 +170,35 @@ export const useInjuryForm = (): UseInjuryFormReturn => {
     
     try {
       // Prepare data for validation
-      const injuryDate = new Date(`${formData.date}T${formData.time}`);
-      
-      // Format the timestamp in Eastern Time for display
-      const formattedEasternTime = formatInTimeZone(
-        injuryDate,
-        'America/New_York',
-        'yyyy-MM-dd h:mm a zzz' // Format: 2025-04-17 11:30 AM EDT
-      );
-      
-      // Find the selected child to get their name
-      const selectedChild = children.find(child => child.id === formData.childId);
-      const childName = selectedChild ? selectedChild.name : '';
-      
-      const reportData = {
-        child_id: formData.childId,
-        child_name: childName,
-        injury_time_eastern: formattedEasternTime, // Only include Eastern Time format
-        location: formData.location,
-        submitting_user_id: formData.submittingUserId,
+      const validationData = {
         incident_description: formData.incidentDescription,
         injury_description: formData.injuryDescription,
         action_taken: formData.actionTaken,
-        is_bite: formData.isBite,
-        biter_child_id: formData.isBite && formData.biterChildId ? formData.biterChildId : undefined,
-        is_peer_aggression: formData.isPeerAggression,
-        aggressor_child_id: formData.isPeerAggression && formData.aggressorChildId ? formData.aggressorChildId : undefined,
       };
       
-      console.log('Submitting form data for validation:', reportData);
-      const response = await validateInjuryReport(reportData);
-      console.log('Received validation response in hook:', response);
+      // Call validation API
+      const response = await validateInjuryReport(validationData);
       
-      if (response.status === 'success') {
-        console.log('Validation successful, setting response state');
-        setValidationResponse(response);
-        setShowSuggestions(true);
-        setAcceptedSuggestions({});
-        
-        // Set parent narrative if available
-        if (response.parentNarrative) {
-          console.log('Parent narrative received:', response.parentNarrative);
-          setParentNarrative(response.parentNarrative);
-        } else {
-          console.log('No parent narrative in the response');
-        }
-      } else {
-        console.error('Validation response indicates error:', response.message);
-        throw new Error(response.message || 'Validation failed');
+      // Process validation response
+      setValidationResponse(response);
+      setShowSuggestions(true);
+      
+      // If no suggestions, show success message
+      if (!response.suggestions || response.suggestions.length === 0) {
+        setParentNarrative(response.parentNarrative || null);
+        alert('Your report looks good! No improvements needed.');
       }
     } catch (error) {
       console.error('Error validating report:', error);
-      setValidationError(error instanceof Error ? error.message : 'An unknown error occurred');
+      
+      // Set validation error
+      let errorMessage = 'Failed to validate report';
+      
+      if (error instanceof Error) {
+        errorMessage = error.message;
+      }
+      
+      setValidationError(errorMessage);
     } finally {
       setIsSubmitting(false);
     }
@@ -219,49 +206,54 @@ export const useInjuryForm = (): UseInjuryFormReturn => {
   
   // Handle accepting a suggestion
   const handleAcceptSuggestion = (field: string) => {
-    if (!validationResponse || !validationResponse.suggestions) return;
+    if (!validationResponse || !validationResponse.suggestions) {
+      return;
+    }
     
+    // Find the suggestion for this field
     const suggestion = validationResponse.suggestions.find(s => s.field === field);
-    if (!suggestion) return;
+    
+    if (!suggestion) {
+      return;
+    }
     
     // Map API field names to form field names
-    const fieldMap: Record<string, keyof InjuryFormData> = {
+    const fieldMapping: Record<string, keyof InjuryFormData> = {
       'incident_description': 'incidentDescription',
       'injury_description': 'injuryDescription',
-      'action_taken': 'actionTaken'
+      'action_taken': 'actionTaken',
     };
     
-    const formField = fieldMap[field];
-    if (!formField) return;
+    const formField = fieldMapping[field];
     
-    setFormData(prev => ({
-      ...prev,
-      [formField]: suggestion.suggestion
-    }));
-    
-    setAcceptedSuggestions(prev => ({
-      ...prev,
-      [field]: true
-    }));
+    // Update form data with suggestion
+    if (formField) {
+      setFormData(prev => ({ ...prev, [formField]: suggestion.suggestion }));
+      setAcceptedSuggestions(prev => ({ ...prev, [field]: true }));
+    }
   };
   
   // Handle accepting all suggestions
   const handleAcceptAllSuggestions = () => {
-    if (!validationResponse || !validationResponse.suggestions) return;
-    
-    const newFormData = { ...formData };
-    const newAcceptedSuggestions: Record<string, boolean> = {};
+    if (!validationResponse || !validationResponse.suggestions) {
+      return;
+    }
     
     // Map API field names to form field names
-    const fieldMap: Record<string, keyof InjuryFormData> = {
+    const fieldMapping: Record<string, keyof InjuryFormData> = {
       'incident_description': 'incidentDescription',
       'injury_description': 'injuryDescription',
-      'action_taken': 'actionTaken'
+      'action_taken': 'actionTaken',
     };
     
+    // Create new form data with all suggestions applied
+    const newFormData = { ...formData };
+    const newAcceptedSuggestions: Record<string, boolean> = { ...acceptedSuggestions };
+    
+    // Apply each suggestion
     for (const suggestion of validationResponse.suggestions) {
       const apiField = suggestion.field;
-      const formField = fieldMap[apiField];
+      const formField = fieldMapping[apiField];
       
       if (formField) {
         (newFormData as any)[formField] = suggestion.suggestion;
@@ -379,6 +371,10 @@ export const useInjuryForm = (): UseInjuryFormReturn => {
     handleAcceptSuggestion,
     handleAcceptAllSuggestions,
     handleFinalSubmit,
-    resetForm
+    resetForm,
+    // TEST-ONLY - REMOVE FOR PRODUCTION - Added 2025-04-17 16:30 EDT
+    // Exposing setFormData to allow direct state updates for testing
+    setFormData
+    // END TEST-ONLY
   };
 };

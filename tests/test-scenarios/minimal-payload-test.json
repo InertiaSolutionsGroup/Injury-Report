@@ -1,0 +1,19 @@
+{
+  "metadata": {
+    "name": "Minimal Payload Test",
+    "description": "Minimal test with '1' for all description fields to test payload delivery and format",
+    "created": "2025-04-17"
+  },
+  "formData": {
+    "child_id": "1",
+    "child_name": "Alex Smith",
+    "injury_time_eastern": "2025-04-17 11:30 AM EDT",
+    "location": "Playground",
+    "submitting_user_id": "101",
+    "incident_description": "1",
+    "injury_description": "1",
+    "action_taken": "1",
+    "is_bite": false,
+    "is_peer_aggression": false
+  }
+}

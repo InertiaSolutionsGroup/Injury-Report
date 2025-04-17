@@ -8,7 +8,7 @@ import {
   markReportAsReviewed, 
   markReportAsDelivered 
 } from '../lib/supabase';
-import { generateMemo, MemoGenerationResponse } from '../lib/api';
+import { validateInjuryReport } from '../lib/api';
 
 interface UseInjuryReportReturn {
   report: InjuryReport | null;
@@ -76,12 +76,15 @@ export const useInjuryReport = (reportId: string | undefined): UseInjuryReportRe
         setReport(reportData);
         setFrontDeskUsers(usersData);
         
-        // If memo content already exists, use it
-        if (reportData.memo_content) {
+        // If parent narrative already exists, use it
+        if (reportData.parent_narrative) {
+          setMemo(reportData.parent_narrative);
+        } else if (reportData.memo_content) {
+          // For backward compatibility, use memo_content if parent_narrative doesn't exist
           setMemo(reportData.memo_content);
         } else {
-          // Otherwise, generate a new memo
-          generateMemoContent(reportData);
+          // Otherwise, generate a new narrative using the combined workflow
+          generateParentNarrative(reportData);
         }
       } catch (error) {
         console.error('Error loading data:', error);
@@ -94,31 +97,32 @@ export const useInjuryReport = (reportId: string | undefined): UseInjuryReportRe
     loadData();
   }, [reportId]);
   
-  // Generate memo content
-  const generateMemoContent = async (reportData: InjuryReport) => {
+  // Generate parent narrative using the combined workflow
+  const generateParentNarrative = async (reportData: InjuryReport) => {
     setIsGeneratingMemo(true);
     setMemoError(null);
     
     try {
-      const response: MemoGenerationResponse = await generateMemo(reportData);
+      // Use the validateInjuryReport function which now returns parent narrative
+      const response = await validateInjuryReport(reportData);
       
-      if (response.status === 'success' && response.memo_content) {
-        setMemo(response.memo_content);
+      if (response.status === 'success' && response.parentNarrative) {
+        setMemo(response.parentNarrative);
       } else {
         throw new Error(response.message || 'Failed to generate Boo Boo Report for Parent');
       }
     } catch (error) {
-      console.error('Error generating memo:', error);
-      setMemoError('Failed to generate the memo. Please try again.');
+      console.error('Error generating parent narrative:', error);
+      setMemoError('Failed to generate the parent narrative. Please try again.');
     } finally {
       setIsGeneratingMemo(false);
     }
   };
   
-  // Handle retry memo generation
+  // Handle retry narrative generation
   const handleRetryMemoGeneration = () => {
     if (!report) return;
-    generateMemoContent(report);
+    generateParentNarrative(report);
   };
   
   // Handle user selection for actions

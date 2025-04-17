@@ -32,6 +32,7 @@ interface UseInjuryFormReturn {
   validationError: string | null;
   showSuggestions: boolean;
   acceptedSuggestions: Record<string, boolean>;
+  parentNarrative: string | null;
   handleInputChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => void;
   validateForm: () => boolean;
   handleSubmitForValidation: (e: React.FormEvent) => Promise<void>;
@@ -70,6 +71,7 @@ export const useInjuryForm = (): UseInjuryFormReturn => {
   const [validationError, setValidationError] = useState<string | null>(null);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [acceptedSuggestions, setAcceptedSuggestions] = useState<Record<string, boolean>>({});
+  const [parentNarrative, setParentNarrative] = useState<string | null>(null);
   
   // Load data for dropdowns
   useEffect(() => {
@@ -173,13 +175,25 @@ export const useInjuryForm = (): UseInjuryFormReturn => {
         aggressor_child_id: formData.isPeerAggression && formData.aggressorChildId ? formData.aggressorChildId : undefined,
       };
       
+      console.log('Submitting form data for validation:', reportData);
       const response = await validateInjuryReport(reportData);
+      console.log('Received validation response in hook:', response);
       
       if (response.status === 'success') {
+        console.log('Validation successful, setting response state');
         setValidationResponse(response);
         setShowSuggestions(true);
         setAcceptedSuggestions({});
+        
+        // Set parent narrative if available
+        if (response.parentNarrative) {
+          console.log('Parent narrative received:', response.parentNarrative);
+          setParentNarrative(response.parentNarrative);
+        } else {
+          console.log('No parent narrative in the response');
+        }
       } else {
+        console.error('Validation response indicates error:', response.message);
         throw new Error(response.message || 'Validation failed');
       }
     } catch (error) {
@@ -277,6 +291,8 @@ export const useInjuryForm = (): UseInjuryFormReturn => {
         ai_validated: validationResponse !== null,
         ai_suggestions_count: validationResponse ? Object.keys(validationResponse.suggestions || {}).length : 0,
         ai_suggestions_accepted: Object.keys(acceptedSuggestions).length,
+        // Include parent narrative if available
+        parent_narrative: parentNarrative || undefined,
         // Required fields for InjuryReport
         is_reviewed: false,
         is_delivered_to_parent: false
@@ -317,6 +333,7 @@ export const useInjuryForm = (): UseInjuryFormReturn => {
     setValidationResponse(null);
     setShowSuggestions(false);
     setAcceptedSuggestions({});
+    setParentNarrative(null);
   };
   
   return {
@@ -328,6 +345,7 @@ export const useInjuryForm = (): UseInjuryFormReturn => {
     validationError,
     showSuggestions,
     acceptedSuggestions,
+    parentNarrative,
     handleInputChange,
     validateForm,
     handleSubmitForValidation,

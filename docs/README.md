@@ -68,12 +68,11 @@ The application follows this general workflow:
 
 1. **Teacher Form Submission**:
    - Teacher fills out injury report details
-   - Form data is validated (locally and optionally via AI)
+   - Form data is validated and a parent narrative is generated via the n8n workflow
    - Report is submitted to Supabase database
 
 2. **Front Desk Review**:
-   - Front desk staff views submitted reports
-   - AI generates a parent-friendly memo for each report
+   - Front desk staff views submitted reports with the generated parent narrative
    - Front desk staff marks reports as reviewed/delivered
 
 For a detailed breakdown of each component and its current implementation status, see [WORKFLOW.md](./WORKFLOW.md).
@@ -85,8 +84,7 @@ For a detailed breakdown of each component and its current implementation status
 | **Supabase Integration** | ✅ FUNCTIONAL | Reading and writing to database works |
 | **Teacher Form** | ✅ FUNCTIONAL | All form fields and validation working |
 | **Front Desk View** | ✅ FUNCTIONAL | Report listing and viewing works |
-| **AI Validation** | ⚠️ STUBBED | n8n webhook not yet implemented |
-| **AI Memo Generation** | ⚠️ STUBBED | n8n webhook not yet implemented |
+| **n8n Injury Report Improver** | ✅ FUNCTIONAL | Combined workflow for validation and parent narrative generation |
 
 ## Database Schema
 
@@ -94,6 +92,8 @@ The application uses three main tables:
 - `Children`: Stores information about children
 - `Users`: Stores information about teachers and front desk staff
 - `InjuryReports`: Stores all injury report data including status tracking
+
+For a comprehensive explanation of the database schema, see [DATABASE_SCHEMA.md](./DATABASE_SCHEMA.md).
 
 ## Documentation Index
 

@@ -1,5 +1,5 @@
 <!--
-Last updated: 2025-04-16 11:57 EDT
+Last updated: 2025-04-16 21:06 EDT
 NOTE: Update this timestamp whenever the document is updated.
 -->
 
@@ -11,6 +11,7 @@ This document is designed to help any Large Language Model (LLM) assistant quick
 
 ## 1. Current Objective
 - Maintain and improve the Injury Reporting App with a focus on code quality, documentation, and robust testing. Ensure all documentation is up to date and centralized in the `docs/` folder.
+- Refine the n8n prompt to correctly handle various types of data received from teachers.
 
 ## 2. Recent Progress
 - Refactored TeacherForm.tsx and MemoView.tsx into smaller subcomponents for maintainability
@@ -31,16 +32,21 @@ This document is designed to help any Large Language Model (LLM) assistant quick
 - Created dedicated `/tests` directory and organized all test assets there
 - Created detailed n8n webhook interactions documentation ([docs/n8n-interactions.md](./n8n-interactions.md))
 - Added React test for AI validation UI to verify suggestion display
+- Implemented a combined n8n workflow for validating injury reports and generating parent narratives
+- Removed the separate memo generation workflow and associated code
+- Enhanced JSON parsing logic to handle various response formats from the n8n webhook
+- Removed sensitive data filtering as it's no longer needed
+- Updated documentation to reflect all recent changes
 
 ## 3. Known Issues / Blockers
-- n8n webhooks for validation and memo generation are currently stubbed out and not functional
+- The n8n prompt may need refinement to correctly handle various types of data it might receive from teachers
 - Some test files have TypeScript errors due to missing Jest type definitions (need to run `npm i --save-dev @types/jest`)
 - Automated tests do not currently run due to missing or unmocked external dependencies (e.g., API modules). Tests need to be updated with proper mocks for meaningful results.
 - Some test coverage is minimal; additional unit and integration tests are recommended for new subcomponents.
 
 ## 4. Next Steps
+- Refine the n8n prompt to correctly handle various types of data received from teachers
 - Install Jest type definitions (`npm i --save-dev @types/jest`) to resolve TypeScript errors in test files
-- Implement the n8n workflows for validation and memo generation
 - Continue refactoring to extract any remaining complex logic into custom hooks
 - Add proper TypeScript interfaces for all component props
 - Mock external dependencies in tests to enable automated test runs
@@ -60,6 +66,8 @@ This document is designed to help any Large Language Model (LLM) assistant quick
 - **Important**: The "Submit as is" functionality should write directly to Supabase, bypassing the n8n validation
 - **Important**: Always check the database schema in `supabase/schema.sql` and `supabase/schema_update.sql` when working with database operations
 - **Important**: All test scripts should be placed in the `/tests` directory, not in `src/utils/`
+- **Important**: The application now uses a combined n8n workflow for both validation and parent narrative generation
+- **Important**: The JSON parsing logic has been enhanced to handle various response formats from the n8n webhook
 
 ## 6. Relevant Files
 - **Core Hooks**:
@@ -79,7 +87,7 @@ This document is designed to help any Large Language Model (LLM) assistant quick
   - `src/components/memo/MemoContent.tsx` - Formatted memo
 - **API & Data Layer**:
   - `src/lib/supabase.ts` - Supabase client and database operations
-  - `src/lib/api.ts` - API functions for validation and memo generation
+  - `src/lib/api.ts` - API functions for validation and parent narrative generation
 - **Database Schema**:
   - `supabase/schema.sql` - Main database schema definition
   - `supabase/schema_update.sql` - Required schema updates for AI validation tracking
@@ -101,15 +109,15 @@ The application follows this general workflow:
 
 1. **Teacher Form Submission**:
    - Teacher fills out injury report details
-   - Form data is validated (locally and optionally via AI)
+   - Form data is validated and parent narrative is generated via the n8n workflow
    - Report is submitted to Supabase database
-   - **Current Status**: Form validation works locally, AI validation is stubbed, direct submission to Supabase is functional
+   - **Current Status**: Form validation and parent narrative generation are functional through the combined n8n workflow
 
 2. **Front Desk Review**:
    - Front desk staff views submitted reports
-   - AI generates a parent-friendly memo for each report
+   - Parent narrative is already generated during the validation step
    - Front desk staff marks reports as reviewed
-   - **Current Status**: Report listing and viewing works, AI memo generation is stubbed, review marking is functional
+   - **Current Status**: Report listing, viewing, and review marking are functional
 
 See [WORKFLOW.md](./WORKFLOW.md) for a detailed breakdown of each component and its current status.
 

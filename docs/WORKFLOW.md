@@ -1,5 +1,5 @@
 <!--
-Last updated: 2025-04-16 10:52 EDT
+Last updated: 2025-04-16 21:08 EDT
 NOTE: Update this timestamp whenever the document is updated.
 -->
 
@@ -13,16 +13,15 @@ The Injury Reporting App follows this general workflow:
 
 1. **Teacher Form Submission**
    - Teacher fills out injury report details
-   - Form data is validated (locally and optionally via AI)
+   - Form data is validated and a parent narrative is generated via the n8n workflow
    - Report is submitted to Supabase database
 
 2. **Front Desk Review**
-   - Front desk staff views submitted reports
-   - AI generates a parent-friendly memo for each report
+   - Front desk staff views submitted reports with the generated parent narrative
    - Front desk staff marks reports as reviewed
 
 3. **Parent Delivery**
-   - Front desk staff delivers memos to parents
+   - Front desk staff delivers narratives to parents
    - Reports are marked as delivered in the system
 
 ## 2. Component Breakdown & Status
@@ -33,8 +32,7 @@ The Injury Reporting App follows this general workflow:
 |-----------|-------------|--------|--------------|
 | **Supabase Connection** | Database connection for storing/retrieving data | ✅ FUNCTIONAL | Environment variables in `.env` file |
 | **API Module** | Interface for all external API calls | ✅ FUNCTIONAL | N/A |
-| **n8n Validation Webhook** | AI validation of injury reports | ⚠️ STUBBED | External n8n instance |
-| **n8n Memo Generation Webhook** | AI generation of parent-friendly memos | ⚠️ STUBBED | External n8n instance |
+| **n8n Injury Report Improver** | Combined workflow for validation and parent narrative generation | ✅ FUNCTIONAL | External n8n instance |
 
 ### 2.2 Teacher Form Components
 
@@ -47,7 +45,7 @@ The Injury Reporting App follows this general workflow:
 | **AdditionalInfoSection** | Bite and peer aggression options | ✅ FUNCTIONAL | N/A |
 | **ValidationError** | Error display with retry options | ✅ FUNCTIONAL | N/A |
 | **FormActions** | Form submission and clear buttons | ✅ FUNCTIONAL | N/A |
-| **AI Validation** | Suggestions for improving report quality | ⚠️ STUBBED | n8n webhook |
+| **AI Validation & Narrative** | Suggestions for improving report quality and parent narrative generation | ✅ FUNCTIONAL | n8n webhook |
 
 ### 2.3 Front Desk Components
 
@@ -60,7 +58,6 @@ The Injury Reporting App follows this general workflow:
 | **MemoContent** | Formatted memo display | ✅ FUNCTIONAL | N/A |
 | **ReviewModal** | Modal for marking reports as reviewed | ✅ FUNCTIONAL | Supabase connection |
 | **DeliverModal** | Modal for marking reports as delivered | ✅ FUNCTIONAL | Supabase connection |
-| **AI Memo Generation** | Generation of parent-friendly memos | ⚠️ STUBBED | n8n webhook |
 
 ## 3. Data Flow & Error Handling
 
@@ -71,7 +68,7 @@ START
   ↓
 [Fill Form]
   ↓
-[Submit for Validation] → [AI Validation] → [Show Suggestions]
+[Submit for Validation] → [n8n Workflow] → [Show Suggestions & Parent Narrative]
   ↓                        ↑                   ↓
 [Error?] → Yes → [Show Error] → [Retry?] → Yes → [Retry Validation]
   ↓                              ↓
@@ -88,7 +85,8 @@ END
 
 **Current Status:**
 - Local form validation: ✅ FUNCTIONAL
-- AI validation via n8n: ⚠️ STUBBED (shows error when attempted)
+- AI validation via n8n: ✅ FUNCTIONAL
+- Parent narrative generation via n8n: ✅ FUNCTIONAL
 - Direct submission to Supabase: ✅ FUNCTIONAL
 - Error handling: ✅ FUNCTIONAL
 
@@ -101,11 +99,11 @@ START
   ↓
 [Select Report]
   ↓
-[Load Report Data] → [Generate Memo]
-  ↓                    ↓
-[Display Report]     [Display Memo]
-  ↓                    ↓
-[Mark as Reviewed] ← ─ ┘
+[Load Report Data & Parent Narrative]
+  ↓
+[Display Report & Parent Narrative]
+  ↓
+[Mark as Reviewed]
   ↓
 [Mark as Delivered]
   ↓
@@ -115,7 +113,7 @@ END
 **Current Status:**
 - Report listing and selection: ✅ FUNCTIONAL
 - Report data loading: ✅ FUNCTIONAL
-- Memo generation via n8n: ⚠️ STUBBED (falls back to existing memo content)
+- Parent narrative display: ✅ FUNCTIONAL
 - Review/delivery marking: ✅ FUNCTIONAL
 
 ## 4. Implementation Notes
@@ -165,32 +163,40 @@ The application code has been updated to use these fields when submitting injury
 
 ### 4.2 n8n Integration
 
-The application is designed to integrate with n8n workflows for AI validation and memo generation. These integrations are currently stubbed out and will show appropriate error messages when attempted.
+The application now integrates with a combined n8n workflow for both validation and parent narrative generation. This workflow is fully functional and replaces the previously separate validation and memo generation workflows.
 
-The n8n webhook URLs are configured in the `.env` file:
+The n8n webhook URL is configured in the `.env` file:
 ```
-REACT_APP_VALIDATION_WEBHOOK_URL=https://n8n-instance.example.com/webhook/validation
-REACT_APP_MEMO_GENERATION_WEBHOOK_URL=https://n8n-instance.example.com/webhook/memo-generation
+REACT_APP_INJURY_REPORT_IMPROVER_URL=https://n8n-instance.example.com/webhook/injury-report-improver
 ```
 
-When these n8n workflows are implemented, they should be configured to:
-1. **Validation Webhook**: Accept injury report data, analyze it, and return suggestions for improvement
-2. **Memo Generation Webhook**: Accept injury report data and generate a parent-friendly memo
+The n8n workflow is configured to:
+1. Accept injury report data
+2. Analyze it to provide suggestions for improvement
+3. Generate a parent-friendly narrative based on the report data
+4. Return both suggestions and the narrative in a single response
+
+The application implements a robust JSON parsing strategy to handle the nested JSON structure in the n8n response:
+1. First, it attempts standard JSON parsing
+2. If that fails, it cleans the string by handling escape characters
+3. If both approaches fail, it uses regex pattern matching to extract valid JSON content
+
+This multi-tiered approach ensures reliable parsing regardless of formatting variations in the response.
 
 ### 4.3 Error Handling Strategy
 
 The application implements a graceful degradation strategy:
 
 1. **Form Validation**: If AI validation fails, users can still submit reports directly
-2. **Memo Generation**: If AI memo generation fails, the system uses existing memo content or a fallback template
+2. **Parent Narrative Generation**: If AI narrative generation fails, the system uses existing content or a fallback template
 
 ## 5. Future Enhancements
 
 Planned enhancements to the workflow include:
 
-1. **Implementing n8n Workflows**:
-   - Set up the validation workflow to provide real-time suggestions
-   - Set up the memo generation workflow to create parent-friendly memos
+1. **Refining the n8n Prompt**:
+   - Improve the prompt to better handle various types of data received from teachers
+   - Enhance the quality of generated parent narratives
 
 2. **Enhanced Error Handling**:
    - Add retry mechanisms for transient errors

@@ -36,6 +36,7 @@ export type InjuryReport = {
   is_peer_aggression: boolean;
   aggressor_child_id?: string;
   memo_content?: string;
+  parent_narrative?: string;
   is_reviewed: boolean;
   reviewed_by_user_id?: string;
   reviewed_timestamp?: string;

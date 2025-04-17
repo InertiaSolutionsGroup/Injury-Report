@@ -17,6 +17,7 @@ const TeacherForm: React.FC = () => {
     validationError,
     showSuggestions,
     acceptedSuggestions,
+    parentNarrative,
     handleInputChange,
     handleSubmitForValidation,
     handleAcceptSuggestion,
@@ -47,6 +48,10 @@ const TeacherForm: React.FC = () => {
             injuryDescription={formData.injuryDescription}
             actionTaken={formData.actionTaken}
             onChange={handleInputChange}
+            validationResponse={validationResponse}
+            acceptedSuggestions={acceptedSuggestions}
+            onAcceptSuggestion={handleAcceptSuggestion}
+            showSuggestions={showSuggestions}
           />
           
           {/* Additional Information Section */}

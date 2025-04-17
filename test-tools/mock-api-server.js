@@ -249,6 +249,11 @@ app.get('/api/logs', (req, res) => {
 // Serve static files from the public directory
 app.use(express.static(path.join(__dirname, 'public')));
 
+// Serve index-v2.html as the default page
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'index-v2.html'));
+});
+
 // Start the server
 app.listen(PORT, () => {
   console.log(`Mock API server running on port ${PORT}`);

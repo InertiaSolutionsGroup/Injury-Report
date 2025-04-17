@@ -28,15 +28,110 @@ const InjuryDetailsSection: React.FC<InjuryDetailsSectionProps> = ({
     return validationResponse.suggestions.find(s => s.field === field);
   };
 
+  // Helper function to check if a suggestion is insufficient
+  const isSuggestionInsufficient = (suggestion: any) => {
+    return suggestion && suggestion.reason === 'insufficient';
+  };
+
+  // Handler for clearing a field to see the placeholder text
+  const handleClearField = (field: string) => {
+    if (!onChange) return;
+    
+    // Create a synthetic event to clear the field
+    const syntheticEvent = {
+      target: {
+        name: field,
+        value: '',
+        type: 'textarea'
+      }
+    } as React.ChangeEvent<HTMLTextAreaElement>;
+    
+    onChange(syntheticEvent);
+  };
+
   // Get suggestions for each field
   const incidentSuggestion = getSuggestion('incident_description');
   const injurySuggestion = getSuggestion('injury_description');
   const actionSuggestion = getSuggestion('action_taken');
 
+  // Helper function to get icon and message based on field
+  const getFieldInfo = (field: string) => {
+    switch(field) {
+      case 'incident_description':
+        return {
+          icon: '📝',
+          title: 'We need a bit more detail',
+          message: 'Could you share how this happened? This helps parents understand the situation better.',
+          color: 'orange'
+        };
+      case 'injury_description':
+        return {
+          icon: '🩹',
+          title: 'A few more specifics would help',
+          message: 'What type of injury was it, and where on the body? These details help parents know what to look for at home.',
+          color: 'blue'
+        };
+      case 'action_taken':
+        return {
+          icon: '❤️',
+          title: 'Parents love knowing how you helped',
+          message: 'How did you care for the child? Parents appreciate knowing both the first aid provided and the comfort measures you offered.',
+          color: 'purple'
+        };
+      default:
+        return {
+          icon: '📝',
+          title: 'More information needed',
+          message: 'Please provide more details to help us generate a parent-friendly report.',
+          color: 'gray'
+        };
+    }
+  };
+
+  // Helper function to get color classes based on field
+  const getColorClasses = (field: string) => {
+    const info = getFieldInfo(field);
+    
+    switch(info.color) {
+      case 'orange':
+        return {
+          bg: 'bg-orange-50',
+          border: 'border-orange-300',
+          text: 'text-orange-800',
+          highlight: 'text-orange-600',
+          button: 'bg-orange-100 hover:bg-orange-200 text-orange-700 focus:ring-orange-500'
+        };
+      case 'blue':
+        return {
+          bg: 'bg-blue-50',
+          border: 'border-blue-300',
+          text: 'text-blue-800',
+          highlight: 'text-blue-600',
+          button: 'bg-blue-100 hover:bg-blue-200 text-blue-700 focus:ring-blue-500'
+        };
+      case 'purple':
+        return {
+          bg: 'bg-purple-50',
+          border: 'border-purple-300',
+          text: 'text-purple-800',
+          highlight: 'text-purple-600',
+          button: 'bg-purple-100 hover:bg-purple-200 text-purple-700 focus:ring-purple-500'
+        };
+      default:
+        return {
+          bg: 'bg-gray-50',
+          border: 'border-gray-300',
+          text: 'text-gray-800',
+          highlight: 'text-gray-600',
+          button: 'bg-gray-100 hover:bg-gray-200 text-gray-700 focus:ring-gray-500'
+        };
+    }
+  };
+
   return (
     <div className="space-y-6 pt-6 border-t border-gray-200">
       <div>
-        <h3 className="text-lg font-medium leading-6 text-gray-900">Instructions</h3>
+        <h3 className="text-xl font-medium leading-6 text-gray-900">Instructions</h3>
         <p className="mt-1 text-sm text-gray-500">
           This app will save you time by transforming your brief inputs into parent-friendly narratives.
         </p>
@@ -45,9 +140,13 @@ const InjuryDetailsSection: React.FC<InjuryDetailsSectionProps> = ({
       <div className="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
         {/* Incident Description */}
         <div className="sm:col-span-6">
-          <label htmlFor="incidentDescription" className="block text-sm font-medium text-gray-700">
-            Incident Description <span className="text-red-500">*</span>
+          <label htmlFor="incidentDescription" className="flex items-center text-base font-medium text-gray-700">
+            <span className="mr-2 text-xl">{getFieldInfo('incident_description').icon}</span>
+            Incident Description <span className="text-red-500 ml-1">*</span>
           </label>
+          <p className="mt-1 mb-2 text-sm text-gray-600 pl-7">
+            Describe HOW the incident happened. Include where the child was, what they were doing, and any relevant context.
+          </p>
           <div className="mt-1">
             <textarea
               id="incidentDescription"
@@ -55,40 +154,40 @@ const InjuryDetailsSection: React.FC<InjuryDetailsSectionProps> = ({
               rows={3}
               value={incidentDescription}
               onChange={onChange}
-              placeholder="Describe HOW the incident occurred with relevant context..."
-              className={`shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md ${
-                incidentSuggestion && !acceptedSuggestions['incident_description'] ? 'border-yellow-400' : ''
-              }`}
+              placeholder={incidentSuggestion ? incidentSuggestion.suggestion : "Describe HOW the incident occurred with relevant context..."}
+              className={`shadow-md focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-2 ${
+                incidentSuggestion && !acceptedSuggestions['incident_description'] ? 'border-orange-400' : 'border-gray-300'
+              } rounded-md p-3`}
               required
             />
           </div>
-          <p className="mt-2 text-sm text-gray-500">
-            Focus on HOW the incident occurred with relevant context
-          </p>
           
           {/* Suggestion for Incident Description */}
           {incidentSuggestion && showSuggestions && !acceptedSuggestions['incident_description'] && (
-            <div className="mt-2 p-3 bg-yellow-50 rounded-md">
+            <div className={`mt-3 p-4 ${getColorClasses('incident_description').bg} ${getColorClasses('incident_description').border} border rounded-md`}>
               <div className="flex">
-                <div className="flex-shrink-0">
-                  <svg className="h-5 w-5 text-yellow-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                    <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2h-1V9a1 1 0 00-1-1z" clipRule="evenodd" />
-                  </svg>
+                <div className="flex-shrink-0 text-2xl mr-3">
+                  {getFieldInfo('incident_description').icon}
                 </div>
-                <div className="ml-3">
-                  <h3 className="text-sm font-medium text-yellow-800">Suggested improvement:</h3>
-                  <div className="mt-2 text-sm text-yellow-700">
-                    <p>{incidentSuggestion.suggestion}</p>
+                <div>
+                  <h3 className={`text-sm font-medium ${getColorClasses('incident_description').highlight}`}>
+                    {getFieldInfo('incident_description').title}
+                  </h3>
+                  <div className={`mt-2 text-sm ${getColorClasses('incident_description').text}`}>
+                    <p className="mb-2">You entered: <em>"{incidentDescription}"</em></p>
+                    <p>{getFieldInfo('incident_description').message}</p>
                   </div>
-                  <div className="mt-2">
-                    <button
-                      type="button"
-                      onClick={() => onAcceptSuggestion && onAcceptSuggestion('incident_description')}
-                      className="inline-flex items-center px-2 py-1 border border-transparent text-xs font-medium rounded text-yellow-700 bg-yellow-100 hover:bg-yellow-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500"
-                    >
-                      Accept suggestion
-                    </button>
-                  </div>
+                  {!isSuggestionInsufficient(incidentSuggestion) && (
+                    <div className="mt-3">
+                      <button
+                        type="button"
+                        onClick={() => onAcceptSuggestion && onAcceptSuggestion('incident_description')}
+                        className={`inline-flex items-center px-3 py-2 border border-transparent text-sm font-medium rounded-md ${getColorClasses('incident_description').button} focus:outline-none focus:ring-2 focus:ring-offset-2`}
+                      >
+                        Use Suggestion
+                      </button>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -97,9 +196,13 @@ const InjuryDetailsSection: React.FC<InjuryDetailsSectionProps> = ({
         
         {/* Injury Description */}
         <div className="sm:col-span-6">
-          <label htmlFor="injuryDescription" className="block text-sm font-medium text-gray-700">
-            Injury Description <span className="text-red-500">*</span>
+          <label htmlFor="injuryDescription" className="flex items-center text-base font-medium text-gray-700">
+            <span className="mr-2 text-xl">{getFieldInfo('injury_description').icon}</span>
+            Injury Description <span className="text-red-500 ml-1">*</span>
           </label>
+          <p className="mt-1 mb-2 text-sm text-gray-600 pl-7">
+            Specify the TYPE of injury (cut, bruise, etc.) and WHERE on the body it occurred. Include size and appearance details when visible.
+          </p>
           <div className="mt-1">
             <textarea
               id="injuryDescription"
@@ -107,40 +210,40 @@ const InjuryDetailsSection: React.FC<InjuryDetailsSectionProps> = ({
               rows={3}
               value={injuryDescription}
               onChange={onChange}
-              placeholder="Specify TYPE and LOCATION with size and appearance details..."
-              className={`shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md ${
-                injurySuggestion && !acceptedSuggestions['injury_description'] ? 'border-yellow-400' : ''
-              }`}
+              placeholder={injurySuggestion ? injurySuggestion.suggestion : "Specify TYPE and LOCATION with size and appearance details..."}
+              className={`shadow-md focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-2 ${
+                injurySuggestion && !acceptedSuggestions['injury_description'] ? 'border-blue-400' : 'border-gray-300'
+              } rounded-md p-3`}
               required
             />
           </div>
-          <p className="mt-2 text-sm text-gray-500">
-            Include TYPE and LOCATION of injury with details on size and appearance
-          </p>
           
           {/* Suggestion for Injury Description */}
           {injurySuggestion && showSuggestions && !acceptedSuggestions['injury_description'] && (
-            <div className="mt-2 p-3 bg-yellow-50 rounded-md">
+            <div className={`mt-3 p-4 ${getColorClasses('injury_description').bg} ${getColorClasses('injury_description').border} border rounded-md`}>
               <div className="flex">
-                <div className="flex-shrink-0">
-                  <svg className="h-5 w-5 text-yellow-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                    <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2h-1V9a1 1 0 00-1-1z" clipRule="evenodd" />
-                  </svg>
+                <div className="flex-shrink-0 text-2xl mr-3">
+                  {getFieldInfo('injury_description').icon}
                 </div>
-                <div className="ml-3">
-                  <h3 className="text-sm font-medium text-yellow-800">Suggested improvement:</h3>
-                  <div className="mt-2 text-sm text-yellow-700">
-                    <p>{injurySuggestion.suggestion}</p>
+                <div>
+                  <h3 className={`text-sm font-medium ${getColorClasses('injury_description').highlight}`}>
+                    {getFieldInfo('injury_description').title}
+                  </h3>
+                  <div className={`mt-2 text-sm ${getColorClasses('injury_description').text}`}>
+                    <p className="mb-2">You entered: <em>"{injuryDescription}"</em></p>
+                    <p>{getFieldInfo('injury_description').message}</p>
                   </div>
-                  <div className="mt-2">
-                    <button
-                      type="button"
-                      onClick={() => onAcceptSuggestion && onAcceptSuggestion('injury_description')}
-                      className="inline-flex items-center px-2 py-1 border border-transparent text-xs font-medium rounded text-yellow-700 bg-yellow-100 hover:bg-yellow-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500"
-                    >
-                      Accept suggestion
-                    </button>
-                  </div>
+                  {!isSuggestionInsufficient(injurySuggestion) && (
+                    <div className="mt-3">
+                      <button
+                        type="button"
+                        onClick={() => onAcceptSuggestion && onAcceptSuggestion('injury_description')}
+                        className={`inline-flex items-center px-3 py-2 border border-transparent text-sm font-medium rounded-md ${getColorClasses('injury_description').button} focus:outline-none focus:ring-2 focus:ring-offset-2`}
+                      >
+                        Use Suggestion
+                      </button>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -149,9 +252,13 @@ const InjuryDetailsSection: React.FC<InjuryDetailsSectionProps> = ({
         
         {/* Action Taken */}
         <div className="sm:col-span-6">
-          <label htmlFor="actionTaken" className="block text-sm font-medium text-gray-700">
-            Action Taken <span className="text-red-500">*</span>
+          <label htmlFor="actionTaken" className="flex items-center text-base font-medium text-gray-700">
+            <span className="mr-2 text-xl">{getFieldInfo('action_taken').icon}</span>
+            Action Taken <span className="text-red-500 ml-1">*</span>
           </label>
+          <p className="mt-1 mb-2 text-sm text-gray-600 pl-7">
+            Describe both the FIRST AID provided (if any) and how you COMFORTED the child emotionally after the incident.
+          </p>
           <div className="mt-1">
             <textarea
               id="actionTaken"
@@ -159,40 +266,40 @@ const InjuryDetailsSection: React.FC<InjuryDetailsSectionProps> = ({
               rows={3}
               value={actionTaken}
               onChange={onChange}
-              placeholder="Include both FIRST AID and EMOTIONAL SUPPORT provided..."
-              className={`shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md ${
-                actionSuggestion && !acceptedSuggestions['action_taken'] ? 'border-yellow-400' : ''
-              }`}
+              placeholder={actionSuggestion ? actionSuggestion.suggestion : "Include both FIRST AID and EMOTIONAL SUPPORT provided..."}
+              className={`shadow-md focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-2 ${
+                actionSuggestion && !acceptedSuggestions['action_taken'] ? 'border-purple-400' : 'border-gray-300'
+              } rounded-md p-3`}
               required
             />
           </div>
-          <p className="mt-2 text-sm text-gray-500">
-            Describe both FIRST AID and EMOTIONAL SUPPORT provided
-          </p>
           
           {/* Suggestion for Action Taken */}
           {actionSuggestion && showSuggestions && !acceptedSuggestions['action_taken'] && (
-            <div className="mt-2 p-3 bg-yellow-50 rounded-md">
+            <div className={`mt-3 p-4 ${getColorClasses('action_taken').bg} ${getColorClasses('action_taken').border} border rounded-md`}>
               <div className="flex">
-                <div className="flex-shrink-0">
-                  <svg className="h-5 w-5 text-yellow-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                    <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2h-1V9a1 1 0 00-1-1z" clipRule="evenodd" />
-                  </svg>
+                <div className="flex-shrink-0 text-2xl mr-3">
+                  {getFieldInfo('action_taken').icon}
                 </div>
-                <div className="ml-3">
-                  <h3 className="text-sm font-medium text-yellow-800">Suggested improvement:</h3>
-                  <div className="mt-2 text-sm text-yellow-700">
-                    <p>{actionSuggestion.suggestion}</p>
+                <div>
+                  <h3 className={`text-sm font-medium ${getColorClasses('action_taken').highlight}`}>
+                    {getFieldInfo('action_taken').title}
+                  </h3>
+                  <div className={`mt-2 text-sm ${getColorClasses('action_taken').text}`}>
+                    <p className="mb-2">You entered: <em>"{actionTaken}"</em></p>
+                    <p>{getFieldInfo('action_taken').message}</p>
                   </div>
-                  <div className="mt-2">
-                    <button
-                      type="button"
-                      onClick={() => onAcceptSuggestion && onAcceptSuggestion('action_taken')}
-                      className="inline-flex items-center px-2 py-1 border border-transparent text-xs font-medium rounded text-yellow-700 bg-yellow-100 hover:bg-yellow-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-500"
-                    >
-                      Accept suggestion
-                    </button>
-                  </div>
+                  {!isSuggestionInsufficient(actionSuggestion) && (
+                    <div className="mt-3">
+                      <button
+                        type="button"
+                        onClick={() => onAcceptSuggestion && onAcceptSuggestion('action_taken')}
+                        className={`inline-flex items-center px-3 py-2 border border-transparent text-sm font-medium rounded-md ${getColorClasses('action_taken').button} focus:outline-none focus:ring-2 focus:ring-offset-2`}
+                      >
+                        Use Suggestion
+                      </button>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>

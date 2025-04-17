@@ -157,6 +157,64 @@ export const useInjuryForm = (): UseInjuryFormReturn => {
     return true;
   };
   
+  // Process validation response
+  const processValidationResponse = (response: ValidationResponse) => {
+    setValidationResponse(response);
+    setShowSuggestions(true);
+    
+    // Check for error status first
+    if (response.status === 'error') {
+      // Don't show suggestions or clear fields for error responses
+      // TEST-ONLY CODE BLOCK - REMOVE FOR PRODUCTION - Added 2025-04-17 17:51 EDT
+      if (response.testDetails) {
+        alert(response.testDetails);
+      } else {
+        alert(response.message || 'There was an error validating your report. Please try again or submit as is.');
+      }
+      // END TEST-ONLY CODE BLOCK
+      return;
+    }
+    
+    // For successful responses with no suggestions, show success message
+    if (!response.suggestions || response.suggestions.length === 0) {
+      setParentNarrative(response.parentNarrative || null);
+      alert('Your report looks good! No improvements needed.');
+      return;
+    }
+    
+    // Delay clearing fields to ensure the component renders with original values first
+    setTimeout(() => {
+      // Clear fields marked as insufficient
+      if (response.suggestions && response.suggestions.length > 0) {
+        const updatedFormData = { ...formData };
+        let fieldsCleared = false;
+        
+        // Map API field names to form field names
+        const fieldMapping: Record<string, keyof InjuryFormData> = {
+          'incident_description': 'incidentDescription',
+          'injury_description': 'injuryDescription',
+          'action_taken': 'actionTaken',
+        };
+        
+        // Check each suggestion
+        response.suggestions.forEach(suggestion => {
+          if (suggestion.reason === 'insufficient') {
+            const formField = fieldMapping[suggestion.field];
+            if (formField) {
+              (updatedFormData[formField] as string) = '';
+              fieldsCleared = true;
+            }
+          }
+        });
+        
+        // Only update form data if fields were cleared
+        if (fieldsCleared) {
+          setFormData(updatedFormData);
+        }
+      }
+    }, 100); // Small delay to ensure component renders first
+  };
+
   // Handle form submission for AI validation
   const handleSubmitForValidation = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -180,14 +238,7 @@ export const useInjuryForm = (): UseInjuryFormReturn => {
       const response = await validateInjuryReport(validationData);
       
       // Process validation response
-      setValidationResponse(response);
-      setShowSuggestions(true);
-      
-      // If no suggestions, show success message
-      if (!response.suggestions || response.suggestions.length === 0) {
-        setParentNarrative(response.parentNarrative || null);
-        alert('Your report looks good! No improvements needed.');
-      }
+      processValidationResponse(response);
     } catch (error) {
       console.error('Error validating report:', error);
       

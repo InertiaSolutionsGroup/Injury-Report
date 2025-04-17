@@ -476,14 +476,18 @@
                 <div class="${isInsufficient ? 'field-status-insufficient' : 'field-status-sufficient'}">
                   <h5 class="friendly-heading">
                     <span class="emoji-icon">${emoji}</span> 
-                    ${friendlyName} 
-                    ${isInsufficient ? '' : '<span class="text-success">(Looks good!)</span>'}
+                    <!-- IMPORTANT UI PATTERN: 
+                         For sufficient fields: Show "[Field Name] - looks good!"
+                         For insufficient fields: Show just the field name -->
+                    ${isInsufficient ? friendlyName : friendlyName + " - looks good!"}
                   </h5>
                   
+                  <!-- Only show instruction paragraph for insufficient fields -->
                   ${isInsufficient ? `<p>${friendlyPrompt}</p>` : ''}
                   
                   <p><strong>Your original entry:</strong> ${field.original}</p>
                   
+                  <!-- Only show textarea for insufficient fields with AI suggestion as placeholder -->
                   ${isInsufficient ? `
                     <textarea 
                       class="teacher-input" 

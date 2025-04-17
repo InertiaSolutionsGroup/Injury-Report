@@ -109,6 +109,44 @@ Enhanced test data loading to reset form before applying new test data:
 1. Modified `handleSelectTestData` in `TeacherForm.tsx` to call `resetForm()` before loading new data
 2. This ensures clean loading when switching between different test scenarios
 
+**Update (2025-04-17 16:53 EDT):**
+Added enhanced console logging for n8n API interactions:
+1. Updated `validateInjuryReport` function in `api.ts` with detailed logging
+2. Added formatted console groups for better readability:
+   - 📤 PAYLOAD SENT TO N8N - Shows the exact JSON payload sent to the n8n webhook
+   - 📥 RAW RESPONSE FROM N8N - Shows the raw response data received
+   - 🔍 PARSED DATA FROM N8N - Shows the parsed data after processing
+   - ✅ FINAL PROCESSED RESULT - Shows the final suggestions, enhanced report, and parent narrative
+   - ❌ ERROR - Shows detailed error information if the API call fails
+3. All logging is clearly marked with TEST-ONLY comments for future removal
+
+**Update (2025-04-17 17:06 EDT):**
+Enhanced n8n response format handling:
+1. Updated `parseJSON` function to extract JSON from markdown code blocks
+2. Modified `validateInjuryReport` function to handle different response formats:
+   - Extracts JSON from the `output` property if present
+   - Handles JSON wrapped in markdown code blocks (```json ... ```)
+   - Falls back to parsing the response directly if no output property is found
+3. Added additional logging to track the parsing process
+4. This ensures compatibility with the current n8n webhook configuration
+
+**Update (2025-04-17 17:52 EDT):**
+Improved error handling and UI for insufficient responses:
+1. Enhanced error handling for n8n webhook failures:
+   - Added detailed error information display during testing
+   - Fixed incorrect "Your report looks good" message when errors occur
+   - Improved error messages with specific details about the failure
+2. Improved handling of insufficient responses:
+   - Fields marked as "insufficient" are automatically cleared
+   - Original entries are preserved in the "You entered" section
+   - Placeholder text provides guidance on what information is needed
+   - "Use Suggestion" button only appears for valid suggestions
+3. Added clear visual indicators with field-specific icons and colors:
+   - 📝 Notepad icon for Incident Description (orange theme)
+   - 🩹 Band-Aid icon for Injury Description (blue theme)
+   - ❤️ Heart icon for Action Taken (purple theme)
+4. All test-specific code is clearly marked for future removal
+
 1. **Server Management**
    - Document how to kill all existing test servers
    - Provide clear steps to start a new server for testing

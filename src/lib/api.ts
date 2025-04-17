@@ -35,133 +35,81 @@ export type ValidationResponse = {
 };
 
 /**
- * Safely parse JSON string from the n8n webhook response
+ * Parse JSON string from the n8n webhook response
  * 
- * The n8n webhook returns a nested JSON string with escape characters
- * that standard JSON.parse() often fails to handle correctly. This function
- * provides a robust way to parse this specific response format.
+ * The n8n webhook returns a JSON string that needs to be parsed.
+ * This function handles the expected format with proper error handling.
  * 
- * @param jsonString - The JSON string from n8n with escape characters
+ * @param jsonString - The JSON string from n8n
  * @returns Parsed JSON object or null if parsing fails
  */
-const safelyParseJSON = (jsonString: string) => {
+const parseJSON = (jsonString: string) => {
   try {
-    // First attempt: standard JSON parsing
     return JSON.parse(jsonString);
   } catch (error) {
-    console.log('Standard JSON parsing failed, trying alternative approach');
-    
-    try {
-      // Second attempt: Clean the string before parsing
-      // n8n responses often contain escaped newlines and quotes that need special handling
-      const cleanedString = jsonString
-        .replace(/\\n/g, '')  // Remove newline escape sequences
-        .replace(/\\\"/g, '"') // Replace escaped quotes with actual quotes
-        .replace(/\"{/g, '{')  // Fix malformed JSON object start
-        .replace(/}\"/g, '}'); // Fix malformed JSON object end
-      
-      return JSON.parse(cleanedString);
-    } catch (altError) {
-      console.log('Second parsing attempt failed, trying with regex extraction');
-      
-      try {
-        // Third attempt: Use regex to extract the JSON content
-        // This handles cases where the JSON is embedded in a string with extra characters
-        const jsonPattern = /{[\s\S]*}/;
-        const match = jsonString.match(jsonPattern);
-        
-        if (match && match[0]) {
-          return JSON.parse(match[0]);
-        } else {
-          throw new Error('No valid JSON pattern found');
-        }
-      } catch (regexError) {
-        console.error('All JSON parsing attempts failed:', regexError);
-        return null;
-      }
-    }
+    console.error('JSON parsing failed:', error);
+    return null;
   }
 };
 
 // Function to validate injury report data with AI and get parent narrative
 export const validateInjuryReport = async (reportData: Partial<InjuryReport>): Promise<ValidationResponse> => {
   try {
-    // Send data directly to webhook without filtering
+    // Send data directly to webhook
     console.log('Sending data to webhook:', reportData);
     
     const response = await axios.post(INJURY_REPORT_IMPROVER_URL, reportData, {
       headers: {
         'Content-Type': 'application/json',
       },
-      timeout: 30000, // 30 seconds timeout
+      timeout: 15000, // 15 seconds timeout
     });
     
-    // Enhanced logging for detailed response examination
     console.log('Received raw response from webhook:', response.data);
-    console.log('Response data type:', typeof response.data);
     
-    // Log the response as a JSON string
-    const responseStr = JSON.stringify(response.data);
-    console.log('Response as JSON string:', responseStr);
-    
-    // Handle different response formats from n8n
+    // Handle the expected response format from n8n
     let parsedData = null;
     
-    // Case 1: Direct object with output property (most common format)
-    if (response.data && typeof response.data === 'object' && response.data.output) {
+    // Check for output in response array or object formats
+    if (Array.isArray(response.data) && response.data.length > 0 && response.data[0].output) {
+      console.log('Found output property in response array');
+      parsedData = parseJSON(response.data[0].output);
+    } else if (response.data && typeof response.data === 'object' && response.data.output) {
       console.log('Found output property in response object');
-      parsedData = safelyParseJSON(response.data.output);
-    } 
-    // Case 2: Array with objects containing output property
-    else if (response.data && Array.isArray(response.data) && response.data.length > 0 && response.data[0].output) {
-      console.log('Found output property in response[0]');
-      parsedData = safelyParseJSON(response.data[0].output);
-    }
-    // Case 3: Direct JSON string
-    else if (response.data && typeof response.data === 'string') {
-      console.log('Response is a direct string, attempting to parse');
-      parsedData = safelyParseJSON(response.data);
+      parsedData = parseJSON(response.data.output);
+    } else {
+      console.error('Unexpected response format from n8n webhook:', response.data);
+      return {
+        status: 'error',
+        message: 'Received unexpected response format from validation service. Please try again or submit as is.'
+      };
     }
     
     // If we successfully parsed the data
     if (parsedData) {
       console.log('Successfully parsed data:', parsedData);
       
-      // Extract the enhancedReport object
-      const enhancedReport = parsedData.enhancedReport || {};
-      
-      // Extract or generate parent narrative
-      let parentNarrative = parsedData.parent_narrative;
-      
-      // If parent_narrative isn't available, try to construct it from the enhanced report
-      if (!parentNarrative && enhancedReport) {
-        try {
-          // Check if we have a parentNarrative directly in the parsed data
-          if (parsedData.parentNarrative) {
-            parentNarrative = parsedData.parentNarrative;
-          } 
-          // Otherwise, try to extract it from the enhancedReport
-          else if (enhancedReport.parent_narrative) {
-            parentNarrative = enhancedReport.parent_narrative;
-          }
-          // As a last resort, construct a simple narrative from enhanced fields
-          else if (enhancedReport.incident_description_enhanced && 
-                  enhancedReport.injury_description_enhanced && 
-                  enhancedReport.action_taken_enhanced) {
-            parentNarrative = `Your child ${enhancedReport.incident_description_enhanced} ${enhancedReport.injury_description_enhanced} ${enhancedReport.action_taken_enhanced}`;
-          }
-        } catch (narrativeError) {
-          console.error('Error extracting parent narrative:', narrativeError);
-        }
+      // Build suggestions array from new or existing formats
+      let suggestionsList = [];
+      if (parsedData.fieldEvaluations && Array.isArray(parsedData.fieldEvaluations)) {
+        suggestionsList = parsedData.fieldEvaluations.map((fe: any) => ({
+          field: fe.field,
+          original: fe.original,
+          suggestion: fe.suggestion,
+          reason: fe.status
+        }));
+      } else {
+        suggestionsList = parsedData.suggestions || [];
       }
       
-      // Extract suggestions if available
-      const suggestions = parsedData.suggestions || [];
+      // Extract enhanced report and parent narrative if available
+      const enhancedReport = parsedData.enhancedReport ? (parsedData.enhancedReport as EnhancedReport) : undefined;
+      const parentNarrative = parsedData.parent_narrative || parsedData.parentNarrative;
       
       return {
         status: 'success',
-        suggestions,
-        enhancedReport: enhancedReport as EnhancedReport,
+        suggestions: suggestionsList,
+        enhancedReport,
         parentNarrative
       };
     }

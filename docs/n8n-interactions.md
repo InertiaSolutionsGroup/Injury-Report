@@ -1,3 +1,8 @@
+<!-- 
+Last updated: 2025-04-17 10:17 EDT
+NOTE: Update this timestamp whenever the document is updated.
+-->
+
 # n8n Interactions
 
 This document explains all interactions between the Injury Reporting App and n8n workflows. It covers the purpose of each interaction, the data sent and received via webhooks, and the formats used.
@@ -7,10 +12,6 @@ This document explains all interactions between the Injury Reporting App and n8n
 ## Overview
 
 The Injury Reporting App integrates with n8n for a combined purpose:
-
-**Injury Report Improver**: To validate injury reports using AI, return suggestions for improvement, and generate a parent-friendly narrative.
-
-This integration is performed via an HTTP webhook configured in the app's environment variable:
 
 - `REACT_APP_INJURY_REPORT_IMPROVER_URL`
 
@@ -31,7 +32,7 @@ This integration is performed via an HTTP webhook configured in the app's enviro
 - Defined by `REACT_APP_INJURY_REPORT_IMPROVER_URL`
 
 ### Sequence of Events
-1. User fills out and submits the injury report form
+1. Teacher fills out and submits the injury report form
 2. Application constructs the report data payload and sends via HTTP POST request to the Injury Report Improver webhook
 3. n8n workflow receives the payload and performs AI processing
 4. n8n returns a response with Enhance Report Field Content (If the teacher provided sufficient initial content) or request for better content from teacher. 
@@ -45,7 +46,8 @@ This integration is performed via an HTTP webhook configured in the app's enviro
 ```
 {
   "child_id": string,                 // ID of the child
-  "injury_timestamp": string,         // Date and time of the incident (ISO 8601)
+  "child_name": string,               // Name of the child
+  "injury_time_eastern": string,      // Formatted time in Eastern Time (e.g., "2025-04-17 11:30 AM EDT")
   "location": string,                 // Location of the incident
   "submitting_user_id": string,       // ID of the submitting user
   "incident_description": string,     // Description of the incident
@@ -57,24 +59,78 @@ This integration is performed via an HTTP webhook configured in the app's enviro
   "aggressor_child_id"?: string       // ID of the aggressor child (if applicable)
 }
 ```
+### Code Node in n8n that transforms the data sent to n8n before it is processed by the AI Agent
 
-**Note:** All fields are sent directly to the n8n webhook without any filtering or modification.
+```javascript
+// Get all input items from the previous node (Webhook)
+const items = $input.all();
 
-### Data Received from n8n
+// Prepare an array to hold the output items for the next node (AI Agent)
+const outputItems = [];
+
+// Loop through each item received from the Webhook
+for (const item of items) {
+  // Access the 'body' object within the JSON payload of the current item
+  const inputBody = item.json.body;
+
+  // Check if the inputBody exists to avoid errors
+  if (inputBody) {
+    // Create a new object containing only the desired attributes
+    const extractedData = {
+      child_id: inputBody.child_id,
+      child_name: inputBody.child_name,
+      injury_time_eastern: inputBody.injury_time_eastern,
+      location: inputBody.location,
+      submitting_user_id: inputBody.submitting_user_id,
+      incident_description: inputBody.incident_description,
+      injury_description: inputBody.injury_description,
+      action_taken: inputBody.action_taken,
+      is_bite: inputBody.is_bite,
+      is_peer_aggression: inputBody.is_peer_aggression,
+    };
+
+    // Optional: Add conditional fields if they exist
+    if (inputBody.is_bite && inputBody.biter_child_id) {
+      extractedData.biter_child_id = inputBody.biter_child_id;
+    }
+    
+    if (inputBody.is_peer_aggression && inputBody.aggressor_child_id) {
+      extractedData.aggressor_child_id = inputBody.aggressor_child_id;
+    }
+
+    // Create the final output structure for the item's JSON payload,
+    // nesting the extracted data under the "ReportData" key.
+    const outputJson = {
+      ReportData: extractedData
+    };
+
+    // Add the structured data as the 'json' payload for the output item
+    outputItems.push({ json: outputJson });
+  } else {
+    // Optional: Handle cases where the 'body' is missing
+    console.warn("Input item did not contain a 'body' object:", item.json);
+    // If you want to maintain the structure even for empty cases:
+    // outputItems.push({ json: { ReportData: {} } });
+  }
+}
+
+// Return the array of processed items to be passed to the next node (AI Agent)
+return outputItems;
+```
+
+### Data Received from n8n Reply via Webhook node
 - **Format:** JSON (application/json)
 - **Attributes:**
 
 ```
-[
-  {
-    "output": "{\n  \"enhancedReport\": {\n    \"child_name\": \"[child_id]\",\n    \"incident_description_enhanced\": \"[enhanced description]\",\n    \"injury_description_enhanced\": \"[enhanced description]\",\n    \"action_taken_enhanced\": \"[enhanced description]\",\n    \"incident_description\": \"[original]\",\n    \"injury_description\": \"[original]\",\n    \"action_taken\": \"[original]\"\n  },\n  \"suggestions\": [\n    {\n      \"field\": \"incident_description\",\n      \"original\": \"[original text]\",\n      \"suggestion\": \"[suggested improvement]\",\n      \"reason\": \"[reason for suggestion]\"\n    },\n    {\n      \"field\": \"injury_description\",\n      \"original\": \"[original text]\",\n      \"suggestion\": \"[suggested improvement]\",\n      \"reason\": \"[reason for suggestion]\"\n    },\n    {\n      \"field\": \"action_taken\",\n      \"original\": \"[original text]\",\n      \"suggestion\": \"[suggested improvement]\",\n      \"reason\": \"[reason for suggestion]\"\n    }\n  ],\n  \"parent_narrative\": \"[Generated parent-friendly narrative]\"\n}"
-  }
-]
+{
+  "output": "{\n  \"enhancedReport\": {\n    \"child_name\": \"[child_id]\",\n    \"incident_description_enhanced\": \"[enhanced description]\",\n    \"injury_description_enhanced\": \"[enhanced description]\",\n    \"action_taken_enhanced\": \"[enhanced description]\",\n    \"incident_description\": \"[original]\",\n    \"injury_description\": \"[original]\",\n    \"action_taken\": \"[original]\"\n  },\n  \"suggestions\": [\n    {\n      \"field\": \"incident_description\",\n      \"original\": \"[original text]\",\n      \"suggestion\": \"[suggested improvement]\",\n      \"reason\": \"[reason for suggestion]\"\n    },\n    {\n      \"field\": \"injury_description\",\n      \"original\": \"[original text]\",\n      \"suggestion\": \"[suggested improvement]\",\n      \"reason\": \"[reason for suggestion]\"\n    },\n    {\n      \"field\": \"action_taken\",\n      \"original\": \"[original text]\",\n      \"suggestion\": \"[suggested improvement]\",\n      \"reason\": \"[reason for suggestion]\"\n    }\n  ],\n  \"parent_narrative\": \"[Generated parent-friendly narrative]\"\n}"
+}
 ```
 
 **Important Notes:**
-1. The response is an array containing a single object
-2. The object has an `output` property that contains a JSON string (with escape characters)
+1. The response is a direct object with an `output` property
+2. The output property contains a JSON string
 3. The JSON string needs to be parsed to access the actual data
 4. The parsed output contains three main sections:
    - `enhancedReport`: Enhanced versions of the submitted fields
@@ -83,26 +139,13 @@ This integration is performed via an HTTP webhook configured in the app's enviro
 
 ### Handling the Response
 
-The application implements a robust JSON parsing strategy to handle the nested JSON structure:
+The application implements a straightforward JSON parsing approach for the n8n response:
 
-1. First, it attempts standard JSON parsing on the response
-2. If that fails, it cleans the string by handling escape characters and malformed JSON object markers
-3. If both approaches fail, it uses regex pattern matching to extract valid JSON content
+1. It checks if the response is an object with an output property
+2. It parses the JSON string in the output property to access the data
+3. It handles errors appropriately if parsing fails or if the format is unexpected
 
-This multi-tiered approach ensures reliable parsing of the n8n response regardless of formatting variations.
-
-The application handles multiple response formats:
-- Direct object with output property (most common)
-- Array with objects containing output property
-- Direct JSON string
-
-After parsing, the application extracts:
-- The enhancedReport object
-- Suggestions for field improvements
-- The parent narrative (from various possible locations in the response)
-
-### Example Response
-<!-- Example removed as it showed inadequate handling of minimal teacher input -->
+This approach ensures reliable processing of the n8n webhook response while maintaining code simplicity.
 
 ---
 
@@ -115,27 +158,23 @@ The transition to a combined Injury Report Improver workflow has several implica
 - The `REACT_APP_MEMO_GENERATION_WEBHOOK_URL` is no longer needed as memo generation is now part of the combined workflow
 
 ### 2. Response Parsing Improvements
-- The API module has been updated with a robust multi-tiered parsing approach to handle various response formats
-- The application can now reliably extract data from different structures in the n8n response
+- The API module has been updated with a streamlined parsing approach focused on the expected format
+- The application can now reliably extract data from the n8n response
 - Parent narrative extraction has been enhanced to look for the narrative in multiple possible locations
 
 ### 3. UI Component Updates
-- The TeacherForm component needs to be enhanced to display the parent narrative generated by the AI
 - The form should clearly indicate that teachers cannot edit the narrative
-- The form should handle cases where teacher input is inadequate and display appropriate guidance
+- The form should handle cases where teacher input is inadequate and n8n has provided appropriate guidance to teacher
 
 ### 4. Error Handling Improvements
 - The application should implement robust error handling for cases where:
   - The n8n workflow fails or times out
   - The response format is unexpected
-  - The AI is unable to generate meaningful suggestions or narrative due to insufficient input
 
 ### 5. Input Validation
-- The application should implement client-side validation to prevent submission of minimal or inadequate inputs
 - Clear guidance should be provided to teachers about the level of detail required for effective AI processing
 
 ### 6. Workflow Changes
-- The submission process now includes both validation and narrative generation in a single step
 - The front desk review process should be updated to reflect that narratives are generated at submission time
 
 ---
@@ -150,6 +189,12 @@ The transition to a combined Injury Report Improver workflow has several implica
 ---
 
 ## Change Log
+- *2025-04-17*: Removed ISO timestamp from n8n payload, using only human-readable Eastern Time format.
+- *2025-04-17*: Added formatted Eastern Time (`injury_time_eastern`) to the payload to provide human-readable timestamps.
+- *2025-04-17*: Added child_name to the payload sent to n8n and updated code to properly extract it from the form data.
+- *2025-04-17*: Updated n8n code node documentation to include proper handling of conditional fields.
+- *2025-04-17*: Updated documentation to reflect the correct output format (direct object with output property).
+- *2025-04-17*: Simplified JSON parsing logic to focus on the expected response format.
 - *2025-04-16*: Updated documentation to reflect the transition from separate validation and memo generation workflows to a combined Injury Report Improver approach. Added implementation impacts and required changes.
 - *2025-04-16*: Updated to reflect improved JSON parsing logic and removal of data filtering functionality.
 

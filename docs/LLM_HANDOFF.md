@@ -20,43 +20,28 @@ This document is designed to help any Large Language Model (LLM) assistant quick
 - Updated FormActions prop types for strict typing
 - Fixed TypeScript errors related to function signatures
 - Created and consolidated all documentation in the `docs/` folder
-- Reconciled and updated the main documentation index ([docs/README.md](./README.md)), removing duplicates
-- Added and updated instructions, changelog, environment, and LLM handoff docs
-- Created detailed workflow documentation with component status ([docs/WORKFLOW.md](./WORKFLOW.md))
 - Implemented graceful error handling for Supabase operations
 - Fixed "Submit as is" functionality to properly write to Supabase database
 - Created comprehensive database schema documentation ([docs/DATABASE_SCHEMA.md](./DATABASE_SCHEMA.md))
 - Updated the database schema to include AI validation tracking fields
 - Modified the code to use the new AI validation fields
-- Created automated testing scripts for form submission and Supabase connection
 - Created dedicated `/tests` directory and organized all test assets there
 - Created detailed n8n webhook interactions documentation ([docs/n8n-interactions.md](./n8n-interactions.md))
-- Added React test for AI validation UI to verify suggestion display
 - Implemented a combined n8n workflow for validating injury reports and generating parent narratives
 - Removed the separate memo generation workflow and associated code
 - Enhanced JSON parsing logic to handle various response formats from the n8n webhook
-- Removed sensitive data filtering as it's no longer needed
-- Updated documentation to reflect all recent changes
 
 ## 3. Known Issues / Blockers
 - The n8n prompt may need refinement to correctly handle various types of data it might receive from teachers
-- Some test files have TypeScript errors due to missing Jest type definitions (need to run `npm i --save-dev @types/jest`)
-- Automated tests do not currently run due to missing or unmocked external dependencies (e.g., API modules). Tests need to be updated with proper mocks for meaningful results.
-- Some test coverage is minimal; additional unit and integration tests are recommended for new subcomponents.
 
 ## 4. Next Steps
 - Refine the n8n prompt to correctly handle various types of data received from teachers
-- Install Jest type definitions (`npm i --save-dev @types/jest`) to resolve TypeScript errors in test files
-- Continue refactoring to extract any remaining complex logic into custom hooks
 - Add proper TypeScript interfaces for all component props
-- Mock external dependencies in tests to enable automated test runs
-- Expand test coverage for critical flows (form validation, modal interactions, etc.)
 - Continue adding inline code comments and JSDoc for major components
 - Keep all documentation in the `docs/` folder and update as the project evolves
 
 ## 5. Key Decisions / Context for LLMs
 - State and business logic should remain in parent components unless otherwise specified
-- Refactoring should not break existing functionality
 - Prefer simple, iterative improvements and avoid introducing new patterns without necessity
 - Always check for and avoid code duplication
 - Maintain environment separation (dev, test, prod)
@@ -64,7 +49,7 @@ This document is designed to help any Large Language Model (LLM) assistant quick
 - Write concise, readable code and documentation
 - Always update this handoff document after major changes
 - **Important**: The "Submit as is" functionality should write directly to Supabase, bypassing the n8n validation
-- **Important**: Always check the database schema in `supabase/schema.sql` and `supabase/schema_update.sql` when working with database operations
+- **Important**: Always check the database schema in `supabase/schema.sql` and `supabase/schema_update2.sql` when working with database operations
 - **Important**: All test scripts should be placed in the `/tests` directory, not in `src/utils/`
 - **Important**: The application now uses a combined n8n workflow for both validation and parent narrative generation
 - **Important**: The JSON parsing logic has been enhanced to handle various response formats from the n8n webhook
@@ -109,9 +94,11 @@ The application follows this general workflow:
 
 1. **Teacher Form Submission**:
    - Teacher fills out injury report details
-   - Form data is validated and parent narrative is generated via the n8n workflow
-   - Report is submitted to Supabase database
-   - **Current Status**: Form validation and parent narrative generation are functional through the combined n8n workflow
+   - Form data is validated/improved and parent narrative is generated via AI agent in n8n workflow and retruned to teacher for review
+   - Teacher reviews and sends back to n8n or to front desk
+   - Report is written to Supabase database
+   - **Current Status**: Form validation and parent narrative generation are functional through the combined n8n workflow.
+   - Need to test and iterate n8n prompt based on test teacher submissions
 
 2. **Front Desk Review**:
    - Front desk staff views submitted reports

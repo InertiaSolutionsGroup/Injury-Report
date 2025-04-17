@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { format } from 'date-fns';
+import { formatInTimeZone } from 'date-fns-tz';
 import { Child, User, fetchChildren, fetchUsers, createInjuryReport } from '../lib/supabase';
 import { validateInjuryReport, ValidationResponse } from '../lib/api';
 
@@ -159,11 +160,23 @@ export const useInjuryForm = (): UseInjuryFormReturn => {
     
     try {
       // Prepare data for validation
-      const injuryTimestamp = new Date(`${formData.date}T${formData.time}`).toISOString();
+      const injuryDate = new Date(`${formData.date}T${formData.time}`);
+      
+      // Format the timestamp in Eastern Time for display
+      const formattedEasternTime = formatInTimeZone(
+        injuryDate,
+        'America/New_York',
+        'yyyy-MM-dd h:mm a zzz' // Format: 2025-04-17 11:30 AM EDT
+      );
+      
+      // Find the selected child to get their name
+      const selectedChild = children.find(child => child.id === formData.childId);
+      const childName = selectedChild ? selectedChild.name : '';
       
       const reportData = {
         child_id: formData.childId,
-        injury_timestamp: injuryTimestamp,
+        child_name: childName,
+        injury_time_eastern: formattedEasternTime, // Only include Eastern Time format
         location: formData.location,
         submitting_user_id: formData.submittingUserId,
         incident_description: formData.incidentDescription,
@@ -270,14 +283,28 @@ export const useInjuryForm = (): UseInjuryFormReturn => {
     
     try {
       // Prepare data for submission
-      const injuryTimestamp = new Date(`${formData.date}T${formData.time}`).toISOString();
+      const injuryDate = new Date(`${formData.date}T${formData.time}`);
+      const injuryTimestamp = injuryDate.toISOString(); // Keep for database storage
+      
+      // Format the timestamp in Eastern Time for display
+      const formattedEasternTime = formatInTimeZone(
+        injuryDate,
+        'America/New_York',
+        'yyyy-MM-dd h:mm a zzz' // Format: 2025-04-17 11:30 AM EDT
+      );
+      
+      // Find the selected child to get their name
+      const selectedChild = children.find(child => child.id === formData.childId);
+      const childName = selectedChild ? selectedChild.name : '';
       
       // Log the form data for debugging
       console.log('Submitting form data:', formData);
       
       const reportData = {
         child_id: formData.childId,
-        injury_timestamp: injuryTimestamp,
+        child_name: childName, // Add child name for reference
+        injury_timestamp: injuryTimestamp, // Keep for database storage
+        injury_time_eastern: formattedEasternTime, // Only for display in n8n
         location: formData.location,
         submitting_user_id: formData.submittingUserId,
         incident_description: formData.incidentDescription,

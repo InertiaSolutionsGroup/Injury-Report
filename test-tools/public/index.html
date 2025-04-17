@@ -1,0 +1,669 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Injury Report Test Visualizer</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    pre {
+      background-color: #f8f9fa;
+      padding: 15px;
+      border-radius: 5px;
+      max-height: 400px;
+      overflow: auto;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+    .field-status-insufficient {
+      background-color: #fff3cd;
+      border-left: 4px solid #ffc107;
+      padding: 10px;
+      margin-bottom: 10px;
+    }
+    .field-status-sufficient {
+      background-color: #d1e7dd;
+      border-left: 4px solid #198754;
+      padding: 10px;
+      margin-bottom: 10px;
+    }
+    .parent-narrative {
+      background-color: #cfe2ff;
+      border-left: 4px solid #0d6efd;
+      padding: 15px;
+      margin: 20px 0;
+      border-radius: 5px;
+    }
+    .teacher-input {
+      border: 2px solid #6c757d;
+      border-radius: 5px;
+      padding: 10px;
+      width: 100%;
+      margin-top: 10px;
+      font-size: 1rem;
+      transition: border-color 0.15s ease-in-out;
+    }
+    .teacher-input:focus {
+      border-color: #0d6efd;
+      outline: none;
+    }
+    .character-count {
+      font-size: 0.8rem;
+      color: #6c757d;
+      text-align: right;
+      margin-top: 5px;
+    }
+    .friendly-heading {
+      font-size: 1.2rem;
+      font-weight: 600;
+      margin-bottom: 10px;
+      color: #495057;
+    }
+    .friendly-message {
+      background-color: #e9f5ff;
+      border-radius: 10px;
+      padding: 15px;
+      margin-bottom: 20px;
+      border-left: 4px solid #0d6efd;
+    }
+    .emoji-icon {
+      font-size: 1.4rem;
+      margin-right: 8px;
+      vertical-align: middle;
+    }
+  </style>
+</head>
+<body>
+  <div class="container mt-4">
+    <h1>Injury Report Test Visualizer</h1>
+    
+    <div class="row mt-4">
+      <div class="col-md-6">
+        <div class="card mb-4">
+          <div class="card-header bg-primary text-white">
+            Test Actions
+          </div>
+          <div class="card-body">
+            <div class="mb-3">
+              <label for="testTypeSelect" class="form-label">Select Test Type:</label>
+              <select class="form-select" id="testTypeSelect">
+                <optgroup label="Inadequate Reports">
+                  <option value="inadequate">All Fields Inadequate</option>
+                  <option value="mixed">Mixed Adequacy (1 Good, 2 Bad)</option>
+                </optgroup>
+                <optgroup label="Adequate Reports">
+                  <option value="adequate">All Fields Adequate</option>
+                </optgroup>
+              </select>
+            </div>
+            
+            <button id="runTestBtn" class="btn btn-primary">Run Selected Test</button>
+            
+            <hr>
+            
+            <h5>View Previous Test Logs</h5>
+            <select class="form-select mb-2" id="logSelect">
+              <option value="">Select a log file...</option>
+            </select>
+          </div>
+        </div>
+      </div>
+      
+      <div class="col-md-6">
+        <div class="card">
+          <div class="card-header bg-info text-white">
+            Test Status
+          </div>
+          <div class="card-body">
+            <div id="testStatus">
+              <p>No test has been run yet. Click one of the test buttons to start.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="row mt-4">
+      <div class="col-md-6">
+        <div class="card">
+          <div class="card-header bg-secondary text-white">
+            Request Payload
+          </div>
+          <div class="card-body">
+            <pre id="requestPayload">No request data available</pre>
+          </div>
+        </div>
+      </div>
+      
+      <div class="col-md-6">
+        <div class="card">
+          <div class="card-header bg-secondary text-white">
+            Raw Response
+          </div>
+          <div class="card-body">
+            <pre id="rawResponse">No response data available</pre>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="row mt-4">
+      <div class="col-12">
+        <div class="card">
+          <div class="card-header bg-success text-white">
+            Parsed Results
+          </div>
+          <div class="card-body">
+            <div id="parsedResults">
+              <p>No parsed results available</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="row mt-4">
+      <div class="col-12">
+        <div class="card">
+          <div class="card-header bg-dark text-white">
+            UI Simulation
+          </div>
+          <div class="card-body">
+            <div id="uiSimulation">
+              <p>No UI simulation available</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="row mt-4 mb-5">
+      <div class="col-12">
+        <div class="card">
+          <div class="card-header bg-danger text-white">
+            Improvement Log
+          </div>
+          <div class="card-body">
+            <div class="mb-3">
+              <label for="improvementCategory" class="form-label">Category</label>
+              <select id="improvementCategory" class="form-select">
+                <option value="ui">UI</option>
+                <option value="api">API Handling</option>
+                <option value="dataFlow">Data Flow</option>
+                <option value="n8n">n8n Integration</option>
+                <option value="other">Other</option>
+              </select>
+            </div>
+            <div class="mb-3">
+              <label for="improvementDescription" class="form-label">Description</label>
+              <textarea id="improvementDescription" class="form-control" rows="3"></textarea>
+            </div>
+            <div class="mb-3">
+              <label for="improvementPriority" class="form-label">Priority</label>
+              <select id="improvementPriority" class="form-select">
+                <option value="high">High</option>
+                <option value="medium">Medium</option>
+                <option value="low">Low</option>
+              </select>
+            </div>
+            <button id="addImprovement" class="btn btn-primary">Add to Improvement Log</button>
+            
+            <div class="mt-4">
+              <h5>Current Improvements</h5>
+              <ul id="improvementList" class="list-group">
+                <!-- Improvements will be added here -->
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Wait for DOM to be fully loaded
+    document.addEventListener('DOMContentLoaded', function() {
+      // Load available logs
+      loadLogs();
+      
+      // Add event listeners
+      document.getElementById('runTestBtn').addEventListener('click', () => runTest(document.getElementById('testTypeSelect').value));
+      document.getElementById('logSelect').addEventListener('change', loadSelectedLog);
+    });
+    
+    // Function to run a test
+    function runTest(testType) {
+      const testStatus = document.getElementById('testStatus');
+      testStatus.innerHTML = `<p>Running ${testType} report test...</p>`;
+      
+      // IMPORTANT: This uses POST to the /api/test/ endpoints which execute the test script
+      // The test script sends the actual request to n8n and logs the results
+      fetch(`/api/test/${testType}`, {
+        method: 'POST'
+      })
+        .then(response => {
+          if (!response.ok) {
+            throw new Error(`HTTP error! Status: ${response.status}`);
+          }
+          return response.json();
+        })
+        .then(data => {
+          testStatus.innerHTML = `<p>Test completed successfully! Loading results...</p>`;
+          
+          // Reload logs to show the new one
+          loadLogs();
+          
+          // Select the newest log after a short delay to ensure it's loaded
+          setTimeout(() => {
+            const logSelect = document.getElementById('logSelect');
+            if (logSelect.options.length > 1) {
+              logSelect.selectedIndex = 1; // First option after the placeholder
+              loadSelectedLog();
+            }
+          }, 1000);
+        })
+        .catch(error => {
+          testStatus.innerHTML = `<p class="text-danger">Error running test: ${error.message}</p>`;
+        });
+    }
+    
+    // Function to load available logs
+    async function loadLogs() {
+      try {
+        const response = await fetch('/api/logs');
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const logs = await response.json();
+        
+        const logSelect = document.getElementById('logSelect');
+        // Clear existing options except the placeholder
+        while (logSelect.options.length > 1) {
+          logSelect.remove(1);
+        }
+        
+        // Add new options
+        logs.forEach(log => {
+          const option = document.createElement('option');
+          option.value = log.filename;
+          
+          // Format date for display
+          const date = new Date(log.created);
+          const formattedDate = `${date.toLocaleDateString()} ${date.toLocaleTimeString()}`;
+          
+          option.text = `${formattedDate} - ${log.filename}`;
+          logSelect.add(option);
+        });
+      } catch (error) {
+        console.error('Error loading logs:', error);
+      }
+    }
+    
+    // Function to load the selected log
+    function loadSelectedLog() {
+      const logSelect = document.getElementById('logSelect');
+      const selectedLog = logSelect.value;
+      
+      if (!selectedLog) {
+        return;
+      }
+      
+      fetch(`/logs/${selectedLog}`)
+        .then(response => response.json())
+        .then(logData => {
+          // Find the latest request and response pair
+          let latestRequest = null;
+          let latestResponse = null;
+          
+          // Process log entries in reverse order to get the most recent pair
+          for (let i = logData.length - 1; i >= 0; i--) {
+            const entry = logData[i];
+            
+            if (entry.type === 'request' && !latestRequest) {
+              latestRequest = entry.request;
+            } else if (entry.type === 'response' && !latestResponse) {
+              latestResponse = entry.response;
+            }
+            
+            // Once we have both, display them
+            if (latestRequest && latestResponse) {
+              displayRequestResponse(latestRequest, latestResponse);
+              break;
+            }
+          }
+          
+          // Update status
+          document.getElementById('testStatus').innerHTML = 
+            `<p class="text-success">Test results loaded successfully!</p>`;
+        })
+        .catch(error => {
+          console.error('Error loading log:', error);
+          document.getElementById('testStatus').innerHTML = 
+            `<p class="text-danger">Error loading log: ${error.message}</p>`;
+        });
+    }
+    
+    // Function to display request and response
+    function displayRequestResponse(request, response) {
+      // Display request payload
+      document.getElementById('requestPayload').textContent = 
+        JSON.stringify(request, null, 2);
+      
+      // Display raw response
+      document.getElementById('rawResponse').textContent = 
+        JSON.stringify(response, null, 2);
+      
+      // Display parsed results and UI simulation
+      displayResponse(response);
+    }
+    
+    // Function to display response data
+    function displayResponse(response) {
+      const rawResponse = document.getElementById('rawResponse');
+      rawResponse.textContent = JSON.stringify(response, null, 2);
+      
+      // Try to parse the output if it's a string
+      if (response && response.output && typeof response.output === 'string') {
+        try {
+          const parsedOutput = JSON.parse(response.output);
+          displayParsedResults(parsedOutput);
+          simulateUI(parsedOutput);
+        } catch (error) {
+          console.error('Error parsing output:', error);
+          document.getElementById('parsedResults').innerHTML = 
+            `<div class="alert alert-danger">Error parsing JSON output: ${error.message}</div>
+             <pre>${response.output}</pre>`;
+        }
+      }
+    }
+    
+    // Function to display parsed results
+    function displayParsedResults(parsedData) {
+      const parsedResults = document.getElementById('parsedResults');
+      let html = '';
+      
+      // Check if parsedData is an array (fieldEvaluations format)
+      if (Array.isArray(parsedData)) {
+        html += '<h4>Field Evaluations</h4>';
+        
+        parsedData.forEach(field => {
+          const statusClass = field.status === 'insufficient' ? 'field-status-insufficient' : 'field-status-sufficient';
+          
+          html += `
+            <div class="${statusClass}">
+              <h5>${formatFieldName(field.field)} (${field.status})</h5>
+              <p><strong>Original:</strong> ${field.original}</p>
+              <p><strong>Suggestion:</strong> ${field.suggestion}</p>
+            </div>
+          `;
+        });
+      }
+      // Check for fieldEvaluations property
+      else if (parsedData.fieldEvaluations && Array.isArray(parsedData.fieldEvaluations)) {
+        html += '<h4>Field Evaluations</h4>';
+        
+        parsedData.fieldEvaluations.forEach(field => {
+          const statusClass = field.status === 'insufficient' ? 'field-status-insufficient' : 'field-status-sufficient';
+          
+          html += `
+            <div class="${statusClass}">
+              <h5>${formatFieldName(field.field)} (${field.status})</h5>
+              <p><strong>Original:</strong> ${field.original}</p>
+              <p><strong>Suggestion:</strong> ${field.suggestion}</p>
+            </div>
+          `;
+        });
+      }
+      
+      // Check for parent narrative
+      if (parsedData.parent_narrative) {
+        html += `
+          <h4>Parent Narrative</h4>
+          <div class="parent-narrative">
+            ${parsedData.parent_narrative}
+          </div>
+        `;
+      }
+      
+      if (html === '') {
+        html = '<p>No structured data found in the response</p>';
+      }
+      
+      parsedResults.innerHTML = html;
+    }
+    
+    // Function to simulate UI based on response
+    function simulateUI(parsedData) {
+      const uiSimulation = document.getElementById('uiSimulation');
+      let html = '';
+      
+      // Handle array format (direct field evaluations)
+      const fieldEvaluations = Array.isArray(parsedData) ? 
+                              parsedData : 
+                              (parsedData.fieldEvaluations || []);
+      
+      // Check if we have field evaluations (inadequate report)
+      if (fieldEvaluations.length > 0 && 
+          fieldEvaluations.some(f => f.status === 'insufficient')) {
+        
+        html += `
+          <div class="friendly-message">
+            <h4><span class="emoji-icon">✨</span> Your report needs a few more details before we can share it with parents</h4>
+            <p>We've highlighted what's needed below - this helps us create a clear, reassuring message for families. Thank you for taking care of our little ones!</p>
+          </div>
+          
+          <form>
+        `;
+        
+        // Add form fields with feedback
+        fieldEvaluations.forEach(field => {
+          const isInsufficient = field.status === 'insufficient';
+          const borderClass = isInsufficient ? 'border-warning' : 'border-success';
+          const feedbackClass = isInsufficient ? 'text-warning' : 'text-success';
+          
+          // Get friendly field name and emoji
+          let friendlyName = formatFieldName(field.field);
+          let emoji = '📝';
+          let friendlyPrompt = '';
+          
+          if (field.field === 'incident_description') {
+            emoji = '📝';
+            friendlyName = "Let's add more detail about how it happened";
+            friendlyPrompt = "We need a bit more information about how the injury occurred to help parents understand what happened. Please describe the sequence of events that led to the injury in a few sentences.";
+          } else if (field.field === 'injury_description') {
+            emoji = '🩹';
+            friendlyName = "What type of injury and where?";
+            friendlyPrompt = "To create a complete report, we need to know what kind of injury occurred and where on the child's body. This helps parents understand exactly what happened.";
+          } else if (field.field === 'action_taken') {
+            emoji = '❤️';
+            friendlyName = "How did you help the child?";
+            friendlyPrompt = "Parents feel reassured knowing both the physical care and emotional support their child received. Please share what first-aid you provided and how you comforted the child.";
+          }
+          
+          html += `
+            <div class="mb-4">
+              <div class="${isInsufficient ? 'field-status-insufficient' : 'field-status-sufficient'}">
+                <h5 class="friendly-heading"><span class="emoji-icon">${emoji}</span> ${friendlyName} ${isInsufficient ? '' : '(Looks good!)'}</h5>
+                ${isInsufficient ? `<p>${friendlyPrompt}</p>` : ''}
+                <p><strong>Your original entry:</strong> ${field.original}</p>
+                ${isInsufficient ? `<p><strong>Instructions:</strong> In the box below, ${field.suggestion}</p>` : ''}
+                ${isInsufficient ? `
+                  <textarea 
+                    class="teacher-input" 
+                    id="${field.field}" 
+                    rows="3" 
+                    placeholder="Update your description here..."
+                  >${field.original}</textarea>
+                  <div class="character-count">
+                    <span id="${field.field}_count">0</span> characters (aim for at least 20)
+                  </div>
+                ` : ''}
+              </div>
+            </div>
+          `;
+        });
+        
+        html += `
+          <div class="d-flex justify-content-end">
+            <button type="button" class="btn btn-primary btn-lg">
+              <i class="bi bi-arrow-repeat me-2"></i>Send Back to AI to Try Again
+            </button>
+          </div>
+          </form>
+        `;
+      } 
+      // Check if we have a parent narrative (adequate report)
+      else if (parsedData.parent_narrative) {
+        html += `
+          <div class="alert alert-success">
+            <h4>Injury Report Successfully Processed</h4>
+            <p>Your report has been validated and a parent narrative has been generated.</p>
+          </div>
+          
+          <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+              Parent Narrative
+            </div>
+            <div class="card-body">
+              <p>${parsedData.parent_narrative}</p>
+            </div>
+          </div>
+          
+          <div class="d-flex justify-content-end">
+            <button type="button" class="btn btn-success">Submit Report</button>
+          </div>
+        `;
+      } else {
+        html = '<p>Unable to simulate UI for this response</p>';
+      }
+      
+      uiSimulation.innerHTML = html;
+      
+      // Add character count listeners for textareas
+      fieldEvaluations.forEach(field => {
+        if (field.status === 'insufficient') {
+          const textarea = document.getElementById(field.field);
+          const countElement = document.getElementById(`${field.field}_count`);
+          
+          if (textarea && countElement) {
+            // Set initial count
+            countElement.textContent = textarea.value.length;
+            
+            // Add event listener
+            textarea.addEventListener('input', function() {
+              countElement.textContent = this.value.length;
+              
+              // Change color based on length
+              if (this.value.length < 20) {
+                countElement.style.color = '#dc3545'; // red
+              } else {
+                countElement.style.color = '#198754'; // green
+              }
+            });
+            
+            // Trigger initial event
+            textarea.dispatchEvent(new Event('input'));
+          }
+        }
+      });
+    }
+    
+    // Helper function to format field names
+    function formatFieldName(field) {
+      return field
+        .split('_')
+        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(' ');
+    }
+    
+    // Function to load improvements from localStorage
+    function loadImprovements() {
+      const improvements = JSON.parse(localStorage.getItem('injuryReportImprovements') || '[]');
+      const improvementList = document.getElementById('improvementList');
+      
+      improvementList.innerHTML = '';
+      
+      improvements.forEach((improvement, index) => {
+        const li = document.createElement('li');
+        li.className = 'list-group-item';
+        
+        const priorityBadge = document.createElement('span');
+        priorityBadge.className = `badge ${getPriorityClass(improvement.priority)} me-2`;
+        priorityBadge.textContent = improvement.priority;
+        
+        const categoryBadge = document.createElement('span');
+        categoryBadge.className = 'badge bg-secondary me-2';
+        categoryBadge.textContent = improvement.category;
+        
+        const description = document.createElement('div');
+        description.className = 'mt-2';
+        description.textContent = improvement.description;
+        
+        const deleteButton = document.createElement('button');
+        deleteButton.className = 'btn btn-sm btn-danger float-end';
+        deleteButton.textContent = 'Delete';
+        deleteButton.onclick = () => deleteImprovement(index);
+        
+        li.appendChild(priorityBadge);
+        li.appendChild(categoryBadge);
+        li.appendChild(deleteButton);
+        li.appendChild(description);
+        
+        improvementList.appendChild(li);
+      });
+    }
+    
+    // Function to add an improvement
+    function addImprovement() {
+      const category = document.getElementById('improvementCategory').value;
+      const description = document.getElementById('improvementDescription').value.trim();
+      const priority = document.getElementById('improvementPriority').value;
+      
+      if (!description) {
+        alert('Please enter a description for the improvement');
+        return;
+      }
+      
+      const improvements = JSON.parse(localStorage.getItem('injuryReportImprovements') || '[]');
+      
+      improvements.push({
+        category,
+        description,
+        priority,
+        timestamp: new Date().toISOString()
+      });
+      
+      localStorage.setItem('injuryReportImprovements', JSON.stringify(improvements));
+      
+      // Clear the form
+      document.getElementById('improvementDescription').value = '';
+      
+      // Reload the list
+      loadImprovements();
+    }
+    
+    // Function to delete an improvement
+    function deleteImprovement(index) {
+      const improvements = JSON.parse(localStorage.getItem('injuryReportImprovements') || '[]');
+      
+      improvements.splice(index, 1);
+      
+      localStorage.setItem('injuryReportImprovements', JSON.stringify(improvements));
+      
+      // Reload the list
+      loadImprovements();
+    }
+    
+    // Helper function to get priority badge class
+    function getPriorityClass(priority) {
+      switch (priority) {
+        case 'high': return 'bg-danger';
+        case 'medium': return 'bg-warning';
+        case 'low': return 'bg-info';
+        default: return 'bg-secondary';
+      }
+    }
+  </script>
+</body>
+</html>

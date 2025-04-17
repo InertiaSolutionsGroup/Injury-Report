@@ -10,6 +10,11 @@ interface InjuryDetailsSectionProps {
   acceptedSuggestions?: Record<string, boolean>;
   onAcceptSuggestion?: (field: string) => void;
   showSuggestions?: boolean;
+  originalValues?: {
+    incidentDescription: string;
+    injuryDescription: string;
+    actionTaken: string;
+  };
 }
 
 const InjuryDetailsSection: React.FC<InjuryDetailsSectionProps> = ({
@@ -20,7 +25,12 @@ const InjuryDetailsSection: React.FC<InjuryDetailsSectionProps> = ({
   validationResponse,
   acceptedSuggestions = {},
   onAcceptSuggestion,
-  showSuggestions = false
+  showSuggestions = false,
+  originalValues = {
+    incidentDescription: '',
+    injuryDescription: '',
+    actionTaken: '',
+  },
 }) => {
   // Helper function to get suggestion for a field
   const getSuggestion = (field: string) => {
@@ -88,8 +98,52 @@ const InjuryDetailsSection: React.FC<InjuryDetailsSectionProps> = ({
     }
   };
 
-  // Helper function to get color classes based on field
-  const getColorClasses = (field: string) => {
+  // Helper function to get positive feedback for sufficient responses
+  const getSufficientFeedback = (field: string) => {
+    switch(field) {
+      case 'incident_description':
+        return {
+          icon: '✅',
+          title: 'Thanks for your input - looks good!',
+          message: 'We\'ve enhanced your description to be even more clear for parents.',
+          color: 'green'
+        };
+      case 'injury_description':
+        return {
+          icon: '✅',
+          title: 'Thanks for your input - looks good!',
+          message: 'We\'ve enhanced your injury details to be more descriptive for parents.',
+          color: 'green'
+        };
+      case 'action_taken':
+        return {
+          icon: '✅',
+          title: 'Thanks for your input - looks good!',
+          message: 'We\'ve enhanced your care description to reassure parents.',
+          color: 'green'
+        };
+      default:
+        return {
+          icon: '✅',
+          title: 'Thanks for your input - looks good!',
+          message: 'We\'ve suggested some enhancements to make your report even better.',
+          color: 'green'
+        };
+    }
+  };
+
+  // Helper function to get color classes based on field and status
+  const getColorClasses = (field: string, isSufficient: boolean = false) => {
+    if (isSufficient) {
+      return {
+        bg: 'bg-green-50',
+        border: 'border-green-300',
+        text: 'text-green-800',
+        highlight: 'text-green-600',
+        button: 'bg-green-100 hover:bg-green-200 text-green-700 focus:ring-green-500'
+      };
+    }
+    
     const info = getFieldInfo(field);
     
     switch(info.color) {
@@ -164,27 +218,33 @@ const InjuryDetailsSection: React.FC<InjuryDetailsSectionProps> = ({
           
           {/* Suggestion for Incident Description */}
           {incidentSuggestion && showSuggestions && !acceptedSuggestions['incident_description'] && (
-            <div className={`mt-3 p-4 ${getColorClasses('incident_description').bg} ${getColorClasses('incident_description').border} border rounded-md`}>
+            <div className={`mt-3 p-4 ${getColorClasses('incident_description', !isSuggestionInsufficient(incidentSuggestion)).bg} ${getColorClasses('incident_description', !isSuggestionInsufficient(incidentSuggestion)).border} border rounded-md`}>
               <div className="flex">
                 <div className="flex-shrink-0 text-2xl mr-3">
-                  {getFieldInfo('incident_description').icon}
+                  {isSuggestionInsufficient(incidentSuggestion) 
+                    ? getFieldInfo('incident_description').icon 
+                    : getSufficientFeedback('incident_description').icon}
                 </div>
                 <div>
-                  <h3 className={`text-sm font-medium ${getColorClasses('incident_description').highlight}`}>
-                    {getFieldInfo('incident_description').title}
+                  <h3 className={`text-sm font-medium ${getColorClasses('incident_description', !isSuggestionInsufficient(incidentSuggestion)).highlight}`}>
+                    {isSuggestionInsufficient(incidentSuggestion) 
+                      ? getFieldInfo('incident_description').title 
+                      : getSufficientFeedback('incident_description').title}
                   </h3>
-                  <div className={`mt-2 text-sm ${getColorClasses('incident_description').text}`}>
-                    <p className="mb-2">You entered: <em>"{incidentDescription}"</em></p>
-                    <p>{getFieldInfo('incident_description').message}</p>
+                  <div className={`mt-2 text-sm ${getColorClasses('incident_description', !isSuggestionInsufficient(incidentSuggestion)).text}`}>
+                    <p className="mb-2">You entered: <em>"{originalValues.incidentDescription || incidentDescription}"</em></p>
+                    <p>{isSuggestionInsufficient(incidentSuggestion) 
+                      ? getFieldInfo('incident_description').message 
+                      : getSufficientFeedback('incident_description').message}</p>
                   </div>
                   {!isSuggestionInsufficient(incidentSuggestion) && (
                     <div className="mt-3">
                       <button
                         type="button"
                         onClick={() => onAcceptSuggestion && onAcceptSuggestion('incident_description')}
-                        className={`inline-flex items-center px-3 py-2 border border-transparent text-sm font-medium rounded-md ${getColorClasses('incident_description').button} focus:outline-none focus:ring-2 focus:ring-offset-2`}
+                        className={`inline-flex items-center px-3 py-2 border border-transparent text-sm font-medium rounded-md ${getColorClasses('incident_description', !isSuggestionInsufficient(incidentSuggestion)).button} focus:outline-none focus:ring-2 focus:ring-offset-2`}
                       >
-                        Use Suggestion
+                        Keep Suggestion
                       </button>
                     </div>
                   )}
@@ -220,27 +280,33 @@ const InjuryDetailsSection: React.FC<InjuryDetailsSectionProps> = ({
           
           {/* Suggestion for Injury Description */}
           {injurySuggestion && showSuggestions && !acceptedSuggestions['injury_description'] && (
-            <div className={`mt-3 p-4 ${getColorClasses('injury_description').bg} ${getColorClasses('injury_description').border} border rounded-md`}>
+            <div className={`mt-3 p-4 ${getColorClasses('injury_description', !isSuggestionInsufficient(injurySuggestion)).bg} ${getColorClasses('injury_description', !isSuggestionInsufficient(injurySuggestion)).border} border rounded-md`}>
               <div className="flex">
                 <div className="flex-shrink-0 text-2xl mr-3">
-                  {getFieldInfo('injury_description').icon}
+                  {isSuggestionInsufficient(injurySuggestion) 
+                    ? getFieldInfo('injury_description').icon 
+                    : getSufficientFeedback('injury_description').icon}
                 </div>
                 <div>
-                  <h3 className={`text-sm font-medium ${getColorClasses('injury_description').highlight}`}>
-                    {getFieldInfo('injury_description').title}
+                  <h3 className={`text-sm font-medium ${getColorClasses('injury_description', !isSuggestionInsufficient(injurySuggestion)).highlight}`}>
+                    {isSuggestionInsufficient(injurySuggestion) 
+                      ? getFieldInfo('injury_description').title 
+                      : getSufficientFeedback('injury_description').title}
                   </h3>
-                  <div className={`mt-2 text-sm ${getColorClasses('injury_description').text}`}>
-                    <p className="mb-2">You entered: <em>"{injuryDescription}"</em></p>
-                    <p>{getFieldInfo('injury_description').message}</p>
+                  <div className={`mt-2 text-sm ${getColorClasses('injury_description', !isSuggestionInsufficient(injurySuggestion)).text}`}>
+                    <p className="mb-2">You entered: <em>"{originalValues.injuryDescription || injuryDescription}"</em></p>
+                    <p>{isSuggestionInsufficient(injurySuggestion) 
+                      ? getFieldInfo('injury_description').message 
+                      : getSufficientFeedback('injury_description').message}</p>
                   </div>
                   {!isSuggestionInsufficient(injurySuggestion) && (
                     <div className="mt-3">
                       <button
                         type="button"
                         onClick={() => onAcceptSuggestion && onAcceptSuggestion('injury_description')}
-                        className={`inline-flex items-center px-3 py-2 border border-transparent text-sm font-medium rounded-md ${getColorClasses('injury_description').button} focus:outline-none focus:ring-2 focus:ring-offset-2`}
+                        className={`inline-flex items-center px-3 py-2 border border-transparent text-sm font-medium rounded-md ${getColorClasses('injury_description', !isSuggestionInsufficient(injurySuggestion)).button} focus:outline-none focus:ring-2 focus:ring-offset-2`}
                       >
-                        Use Suggestion
+                        Keep Suggestion
                       </button>
                     </div>
                   )}
@@ -276,27 +342,33 @@ const InjuryDetailsSection: React.FC<InjuryDetailsSectionProps> = ({
           
           {/* Suggestion for Action Taken */}
           {actionSuggestion && showSuggestions && !acceptedSuggestions['action_taken'] && (
-            <div className={`mt-3 p-4 ${getColorClasses('action_taken').bg} ${getColorClasses('action_taken').border} border rounded-md`}>
+            <div className={`mt-3 p-4 ${getColorClasses('action_taken', !isSuggestionInsufficient(actionSuggestion)).bg} ${getColorClasses('action_taken', !isSuggestionInsufficient(actionSuggestion)).border} border rounded-md`}>
               <div className="flex">
                 <div className="flex-shrink-0 text-2xl mr-3">
-                  {getFieldInfo('action_taken').icon}
+                  {isSuggestionInsufficient(actionSuggestion) 
+                    ? getFieldInfo('action_taken').icon 
+                    : getSufficientFeedback('action_taken').icon}
                 </div>
                 <div>
-                  <h3 className={`text-sm font-medium ${getColorClasses('action_taken').highlight}`}>
-                    {getFieldInfo('action_taken').title}
+                  <h3 className={`text-sm font-medium ${getColorClasses('action_taken', !isSuggestionInsufficient(actionSuggestion)).highlight}`}>
+                    {isSuggestionInsufficient(actionSuggestion) 
+                      ? getFieldInfo('action_taken').title 
+                      : getSufficientFeedback('action_taken').title}
                   </h3>
-                  <div className={`mt-2 text-sm ${getColorClasses('action_taken').text}`}>
-                    <p className="mb-2">You entered: <em>"{actionTaken}"</em></p>
-                    <p>{getFieldInfo('action_taken').message}</p>
+                  <div className={`mt-2 text-sm ${getColorClasses('action_taken', !isSuggestionInsufficient(actionSuggestion)).text}`}>
+                    <p className="mb-2">You entered: <em>"{originalValues.actionTaken || actionTaken}"</em></p>
+                    <p>{isSuggestionInsufficient(actionSuggestion) 
+                      ? getFieldInfo('action_taken').message 
+                      : getSufficientFeedback('action_taken').message}</p>
                   </div>
                   {!isSuggestionInsufficient(actionSuggestion) && (
                     <div className="mt-3">
                       <button
                         type="button"
                         onClick={() => onAcceptSuggestion && onAcceptSuggestion('action_taken')}
-                        className={`inline-flex items-center px-3 py-2 border border-transparent text-sm font-medium rounded-md ${getColorClasses('action_taken').button} focus:outline-none focus:ring-2 focus:ring-offset-2`}
+                        className={`inline-flex items-center px-3 py-2 border border-transparent text-sm font-medium rounded-md ${getColorClasses('action_taken', !isSuggestionInsufficient(actionSuggestion)).button} focus:outline-none focus:ring-2 focus:ring-offset-2`}
                       >
-                        Use Suggestion
+                        Keep Suggestion
                       </button>
                     </div>
                   )}

@@ -22,6 +22,9 @@ interface InjuryFormData {
   biterChildId: string;
   isPeerAggression: boolean;
   aggressorChildId: string;
+  originalIncidentDescription: string | null;
+  originalInjuryDescription: string | null;
+  originalActionTaken: string | null;
 }
 
 interface UseInjuryFormReturn {
@@ -60,6 +63,9 @@ const initialFormData: InjuryFormData = {
   biterChildId: '',
   isPeerAggression: false,
   aggressorChildId: '',
+  originalIncidentDescription: null,
+  originalInjuryDescription: null,
+  originalActionTaken: null,
 };
 
 export const useInjuryForm = (): UseInjuryFormReturn => {
@@ -162,9 +168,15 @@ export const useInjuryForm = (): UseInjuryFormReturn => {
     setValidationResponse(response);
     setShowSuggestions(true);
     
+    // Store original values before making any changes
+    const originalValues = {
+      incidentDescription: formData.incidentDescription,
+      injuryDescription: formData.injuryDescription,
+      actionTaken: formData.actionTaken
+    };
+    
     // Check for error status first
     if (response.status === 'error') {
-      // Don't show suggestions or clear fields for error responses
       // TEST-ONLY CODE BLOCK - REMOVE FOR PRODUCTION - Added 2025-04-17 17:51 EDT
       if (response.testDetails) {
         alert(response.testDetails);
@@ -182,37 +194,64 @@ export const useInjuryForm = (): UseInjuryFormReturn => {
       return;
     }
     
-    // Delay clearing fields to ensure the component renders with original values first
-    setTimeout(() => {
-      // Clear fields marked as insufficient
-      if (response.suggestions && response.suggestions.length > 0) {
-        const updatedFormData = { ...formData };
-        let fieldsCleared = false;
+    // Process each suggestion
+    if (response.suggestions && response.suggestions.length > 0) {
+      const updatedFormData = { ...formData };
+      let fieldsUpdated = false;
+      
+      // Map API field names to form field names
+      const fieldMapping: Record<string, keyof InjuryFormData> = {
+        'incident_description': 'incidentDescription',
+        'injury_description': 'injuryDescription',
+        'action_taken': 'actionTaken',
+      };
+      
+      // Map API field names to original field names
+      const originalFieldMapping: Record<string, keyof InjuryFormData> = {
+        'incident_description': 'originalIncidentDescription',
+        'injury_description': 'originalInjuryDescription',
+        'action_taken': 'originalActionTaken',
+      };
+      
+      // Check each suggestion
+      response.suggestions.forEach(suggestion => {
+        const formField = fieldMapping[suggestion.field];
+        const originalField = originalFieldMapping[suggestion.field];
         
-        // Map API field names to form field names
-        const fieldMapping: Record<string, keyof InjuryFormData> = {
-          'incident_description': 'incidentDescription',
-          'injury_description': 'injuryDescription',
-          'action_taken': 'actionTaken',
-        };
-        
-        // Check each suggestion
-        response.suggestions.forEach(suggestion => {
+        if (formField) {
           if (suggestion.reason === 'insufficient') {
-            const formField = fieldMapping[suggestion.field];
-            if (formField) {
-              (updatedFormData[formField] as string) = '';
-              fieldsCleared = true;
+            // For insufficient fields:
+            // 1. Clear the field to prompt teacher to provide better input
+            // 2. Store original value for reference
+            // 3. The placeholder text will show the AI's suggestion on what information is needed
+            if (originalField) {
+              (updatedFormData[originalField] as string) = updatedFormData[formField] as string;
             }
+            (updatedFormData[formField] as string) = '';
+            fieldsUpdated = true;
+          } else if (suggestion.reason === 'sufficient') {
+            // For sufficient fields:
+            // 1. Store original value for reference
+            // 2. Replace with AI's improved version of the text
+            // 3. The UI will show positive feedback and a "Keep Suggestion" button
+            if (originalField) {
+              (updatedFormData[originalField] as string) = updatedFormData[formField] as string;
+            }
+            // The suggestion field contains the AI's improved version of the text
+            (updatedFormData[formField] as string) = suggestion.suggestion;
+            fieldsUpdated = true;
           }
-        });
-        
-        // Only update form data if fields were cleared
-        if (fieldsCleared) {
-          setFormData(updatedFormData);
         }
+      });
+      
+      // Only update form data if fields were updated
+      if (fieldsUpdated) {
+        // Delay updating to ensure component renders with original values first
+        setTimeout(() => {
+          setFormData(updatedFormData);
+        }, 100);
       }
-    }, 100); // Small delay to ensure component renders first
+    }
   };
 
   // Handle form submission for AI validation

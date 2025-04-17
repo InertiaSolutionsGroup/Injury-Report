@@ -111,6 +111,11 @@ const TeacherForm: React.FC = () => {
             acceptedSuggestions={acceptedSuggestions}
             onAcceptSuggestion={handleAcceptSuggestion}
             showSuggestions={showSuggestions}
+            originalValues={{
+              incidentDescription: formData.originalIncidentDescription || '',
+              injuryDescription: formData.originalInjuryDescription || '',
+              actionTaken: formData.originalActionTaken || ''
+            }}
           />
           
           {/* Additional Information Section */}

@@ -135,8 +135,8 @@ const TeacherForm: React.FC = () => {
               acceptedSuggestions={acceptedSuggestions}
               onAcceptSuggestion={handleAcceptSuggestion}
               onAcceptAllSuggestions={handleAcceptAllSuggestions}
-              onFinalSubmit={handleFinalSubmit}
-              isSubmitting={isSubmitting}
+              onSubmit={handleFinalSubmit}
+              parentNarrative={parentNarrative}
             />
           )}
           

@@ -1,5 +1,5 @@
 <!--
-Last updated: 2025-04-16 10:58 EDT
+Last updated: 2025-04-17 19:56 EDT
 NOTE: Update this timestamp whenever the document is updated.
 -->
 
@@ -13,6 +13,8 @@ This application provides a web-based solution for documenting and managing chil
 - **Front Desk View**: Enables front desk staff to view submitted reports and track their status
 - **Memo Generation**: Automatically generates professional, parent-friendly "Boo-Boo Report" memos
 - **Status Management**: Tracks review and delivery status of each report
+- **Enhanced UI**: Provides clear feedback for both sufficient and insufficient entries
+- **Intelligent Validation**: Offers improved versions for sufficient entries and guidance for insufficient ones
 
 ## Technology Stack
 
@@ -20,6 +22,7 @@ This application provides a web-based solution for documenting and managing chil
 - **Styling**: Tailwind CSS
 - **Database**: Supabase (PostgreSQL)
 - **AI Integration**: n8n webhook endpoints for validation and memo generation
+- **AI Model**: GPT-4.1 Mini for validation and narrative generation
 
 ## Setup Instructions
 
@@ -40,8 +43,7 @@ This application provides a web-based solution for documenting and managing chil
    ```
    REACT_APP_SUPABASE_URL=your-supabase-project-url
    REACT_APP_SUPABASE_ANON_KEY=your-supabase-anon-key
-   REACT_APP_VALIDATION_WEBHOOK_URL=your-n8n-validation-webhook-url
-   REACT_APP_MEMO_GENERATION_WEBHOOK_URL=your-n8n-memo-generation-webhook-url
+   REACT_APP_INJURY_REPORT_IMPROVER_URL=your-n8n-injury-report-improver-webhook-url
    ```
 4. Set up the Supabase database by executing the SQL script in `supabase/schema.sql`
 5. Populate sample data for `Children` and `Users` tables via the Supabase UI
@@ -69,6 +71,8 @@ The application follows this general workflow:
 1. **Teacher Form Submission**:
    - Teacher fills out injury report details
    - Form data is validated and a parent narrative is generated via the n8n workflow
+   - For sufficient entries, the AI provides improved versions of the text
+   - For insufficient entries, the AI provides guidance on what information is missing
    - Report is submitted to Supabase database
 
 2. **Front Desk Review**:
@@ -85,6 +89,22 @@ For a detailed breakdown of each component and its current implementation status
 | **Teacher Form** | ✅ FUNCTIONAL | All form fields and validation working |
 | **Front Desk View** | ✅ FUNCTIONAL | Report listing and viewing works |
 | **n8n Injury Report Improver** | ✅ FUNCTIONAL | Combined workflow for validation and parent narrative generation |
+| **Enhanced UI** | ✅ FUNCTIONAL | Improved handling of sufficient/insufficient responses |
+
+## Current Testing Focus
+
+The application is currently in a testing phase focused on:
+
+1. **Enhanced n8n Prompt**:
+   - Testing the restructured prompt optimized for GPT-4.1 Mini
+   - Verifying that the AI provides appropriate responses for both sufficient and insufficient entries
+
+2. **UI Improvements**:
+   - Testing the enhanced UI for handling sufficient and insufficient responses
+   - Verifying that original values are properly preserved
+   - Ensuring visual indicators and feedback messages are clear and helpful
+
+A comprehensive test plan is available in `/tests/test-scenarios/TEST_PLAN.md`.
 
 ## Database Schema
 
@@ -103,6 +123,7 @@ For a comprehensive explanation of the database schema, see [DATABASE_SCHEMA.md]
 - [LLM_HANDOFF.md](./LLM_HANDOFF.md): Handoff guide for LLMs and developers
 - [CHANGELOG.md](./CHANGELOG.md): Chronological list of all project changes
 - [ENVIRONMENT.md](./ENVIRONMENT.md): Environment variable and API key setup
+- [n8n-interactions.md](./n8n-interactions.md): Documentation of n8n webhook interactions
 
 ## How to Use
 - Start here if you are new to the project or returning after a break
@@ -115,6 +136,8 @@ For a comprehensive explanation of the database schema, see [DATABASE_SCHEMA.md]
 - The application is designed to work even when n8n webhooks are not available
 - "Submit as is" functionality writes directly to Supabase, bypassing n8n validation
 - Error handling is implemented to gracefully handle missing dependencies
+- For sufficient entries, the AI provides an improved version of the text
+- For insufficient entries, the AI provides guidance on what information is missing
 
 ---
 

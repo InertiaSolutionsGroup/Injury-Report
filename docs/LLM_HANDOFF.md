@@ -1,5 +1,5 @@
 <!--
-Last updated: 2025-04-16 21:06 EDT
+Last updated: 2025-04-17 21:15 EDT
 NOTE: Update this timestamp whenever the document is updated.
 -->
 
@@ -12,6 +12,8 @@ This document is designed to help any Large Language Model (LLM) assistant quick
 ## 1. Current Objective
 - Maintain and improve the Injury Reporting App with a focus on code quality, documentation, and robust testing. Ensure all documentation is up to date and centralized in the `docs/` folder.
 - Refine the n8n prompt to correctly handle various types of data received from teachers.
+- Improve the user interface for handling sufficient and insufficient responses from the AI validation.
+- Complete testing of the enhanced UI and n8n prompt functionality.
 
 ## 2. Recent Progress
 - Refactored TeacherForm.tsx and MemoView.tsx into smaller subcomponents for maintainability
@@ -30,12 +32,32 @@ This document is designed to help any Large Language Model (LLM) assistant quick
 - Implemented a combined n8n workflow for validating injury reports and generating parent narratives
 - Removed the separate memo generation workflow and associated code
 - Enhanced JSON parsing logic to handle various response formats from the n8n webhook
+- Improved error handling to display actual error messages from n8n
+- Enhanced UI for handling insufficient responses with clear feedback and guidance
+- Added positive feedback for sufficient entries with improved visual indicators
+- Completely restructured the n8n prompt for GPT-4.1 Mini following best practices
+- Added model identification in the n8n response for tracking and debugging
+- Improved code comments to clarify logic for handling sufficient and insufficient responses
+- Updated the n8n payload to include child_name, injury_time_eastern, and location for improved context
+- Enhanced UI with clearer instructions for both sufficient and insufficient fields
+- Updated button text from "Keep Suggestion" to "Accept Enhancement" for clarity
+- Made the "Accept All Enhancements" button conditional on all fields being sufficient
+- Disabled the submit button when insufficient fields are present
+- Added natural language enhancements to the n8n prompt to use child names and time references
+- Enhanced n8n prompt with more specific evaluation criteria for each field type
+- Added special handling for head injuries in the n8n prompt
+- Included examples of sufficient vs. insufficient descriptions in the prompt
+- Improved guidance for recognizing and expanding common abbreviations like "TLC"
+- Added parent narrative generation to the n8n prompt (only generated when all fields are sufficient)
+- Added ParentNarrativeSection component to display the AI-generated parent narrative
 
 ## 3. Known Issues / Blockers
-- The n8n prompt may need refinement to correctly handle various types of data it might receive from teachers
+- Currently in testing phase to validate the enhanced n8n prompt and UI improvements
+- Need to verify that the GPT-4.1 Mini model correctly follows the updated prompt format
 
 ## 4. Next Steps
-- Refine the n8n prompt to correctly handle various types of data received from teachers
+- Complete testing of the enhanced n8n prompt with GPT-4.1 Mini
+- Verify UI behavior with both sufficient and insufficient responses
 - Add proper TypeScript interfaces for all component props
 - Continue adding inline code comments and JSDoc for major components
 - Keep all documentation in the `docs/` folder and update as the project evolves
@@ -53,6 +75,15 @@ This document is designed to help any Large Language Model (LLM) assistant quick
 - **Important**: All test scripts should be placed in the `/tests` directory, not in `src/utils/`
 - **Important**: The application now uses a combined n8n workflow for both validation and parent narrative generation
 - **Important**: The JSON parsing logic has been enhanced to handle various response formats from the n8n webhook
+- **Important**: For sufficient responses, the AI provides an improved version of the text with the option to accept or edit
+- **Important**: For insufficient responses, the AI provides specific guidance on what information is missing and requires the teacher to update the field
+- **Important**: The "Accept All Enhancements" button only appears when all fields are sufficient
+- **Important**: The submit button is disabled when any fields are insufficient, requiring the teacher to complete all required information
+- **Important**: The n8n prompt now includes special handling for head injuries, requiring more detailed descriptions
+- **Important**: The n8n prompt contains examples of sufficient vs. insufficient descriptions for teacher reference
+- **Important**: The data sent to n8n includes child_name, injury_time_eastern, and location for better context
+- **Important**: The n8n prompt now generates a parent-friendly narrative when all fields are sufficient
+- **Important**: The parent narrative is displayed in a dedicated section in the UI
 
 ## 6. Relevant Files
 - **Core Hooks**:
@@ -65,6 +96,7 @@ This document is designed to help any Large Language Model (LLM) assistant quick
   - `src/components/teacher/AdditionalInfoSection.tsx` - Bite/aggression info
   - `src/components/teacher/ValidationError.tsx` - Error display
   - `src/components/teacher/FormActions.tsx` - Submit buttons
+  - `src/components/teacher/SuggestionPanel.tsx` - Handles suggestions and parent narrative display
 - **Memo View Components**:
   - `src/components/MemoView.tsx` - Main memo container
   - `src/components/memo/MemoHeader.tsx` - Status and actions
@@ -80,6 +112,9 @@ This document is designed to help any Large Language Model (LLM) assistant quick
   - `/tests/testFormSubmission.js` - Automated test for form submission
   - `/tests/testSupabase.js` - Utility to test Supabase connection
   - `/tests/TeacherForm.AISuggestions.test.tsx` - React test for AI validation UI
+  - `/tests/test-scenarios/` - Test data scenarios for validation testing
+  - `/tests/test-scenarios/TEST_PLAN.md` - Comprehensive test plan
+  - `/tests/n8nPrompt.md` - Prompt for the n8n AI agent
 - **Documentation**:
   - `docs/README.md` - Main documentation index
   - `docs/WORKFLOW.md` - Detailed workflow and component status
@@ -88,17 +123,22 @@ This document is designed to help any Large Language Model (LLM) assistant quick
   - `docs/ENVIRONMENT.md` - Environment configuration
   - `docs/DATABASE_SCHEMA.md` - Database schema documentation
   - `docs/n8n-interactions.md` - n8n webhook interactions documentation
+  - `docs/n8nSysPrompt.md` - System prompt for the n8n AI agent
 
 ## 7. Application Workflow Overview
 The application follows this general workflow:
 
 1. **Teacher Form Submission**:
    - Teacher fills out injury report details
-   - Form data is validated/improved and parent narrative is generated via AI agent in n8n workflow and retruned to teacher for review
-   - Teacher reviews and sends back to n8n or to front desk
-   - Report is written to Supabase database
+   - Form data (including child_name, injury_time_eastern, and location) is sent to n8n for validation and parent narrative generation
+   - n8n returns evaluations for each field (sufficient or insufficient) with suggestions
+   - For sufficient fields: AI provides enhanced text that teachers can accept or edit
+   - For insufficient fields: AI provides guidance on what information is missing, requiring teachers to update
+   - When all fields are sufficient: AI generates a parent-friendly narrative summarizing the incident
+   - Teacher reviews, completes any insufficient fields, and submits to front desk
+   - Report (including the parent narrative) is written to Supabase database
    - **Current Status**: Form validation and parent narrative generation are functional through the combined n8n workflow.
-   - Need to test and iterate n8n prompt based on test teacher submissions
+   - Currently testing enhanced n8n prompt with GPT-4.1 Mini and improved UI for handling sufficient/insufficient responses
 
 2. **Front Desk Review**:
    - Front desk staff views submitted reports

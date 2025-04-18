@@ -70,29 +70,29 @@ const InjuryDetailsSection: React.FC<InjuryDetailsSectionProps> = ({
       case 'incident_description':
         return {
           icon: '📝',
-          title: 'We need a bit more detail',
-          message: 'Could you share how this happened? This helps parents understand the situation better.',
+          title: 'More Information Required',
+          message: 'Please add details about HOW this happened. This information is required for parents to understand the situation properly.',
           color: 'orange'
         };
       case 'injury_description':
         return {
           icon: '🩹',
-          title: 'A few more specifics would help',
-          message: 'What type of injury was it, and where on the body? These details help parents know what to look for at home.',
+          title: 'More Details Required',
+          message: 'Please specify both the TYPE and LOCATION of the injury. These specific details are required for parents to know what to look for at home.',
           color: 'blue'
         };
       case 'action_taken':
         return {
           icon: '❤️',
-          title: 'Parents love knowing how you helped',
-          message: 'How did you care for the child? Parents appreciate knowing both the first aid provided and the comfort measures you offered.',
+          title: 'Additional Care Information Required',
+          message: 'Please describe both the FIRST AID provided and how you COMFORTED the child. Both aspects are required for complete parent communication.',
           color: 'purple'
         };
       default:
         return {
           icon: '📝',
-          title: 'More information needed',
-          message: 'Please provide more details to help us generate a parent-friendly report.',
+          title: 'More Information Required',
+          message: 'Please provide the required details to complete this report properly.',
           color: 'gray'
         };
     }
@@ -104,29 +104,29 @@ const InjuryDetailsSection: React.FC<InjuryDetailsSectionProps> = ({
       case 'incident_description':
         return {
           icon: '✅',
-          title: 'Thanks for your input - looks good!',
-          message: 'We\'ve enhanced your description to be even more clear for parents.',
+          title: 'AI Enhancement Available',
+          message: 'The AI has improved your description for clarity. You can accept this enhanced version or edit it further to your preference.',
           color: 'green'
         };
       case 'injury_description':
         return {
           icon: '✅',
-          title: 'Thanks for your input - looks good!',
-          message: 'We\'ve enhanced your injury details to be more descriptive for parents.',
+          title: 'AI Enhancement Available',
+          message: 'The AI has enhanced your injury details for better parent understanding. You can accept this improved version or edit it further.',
           color: 'green'
         };
       case 'action_taken':
         return {
           icon: '✅',
-          title: 'Thanks for your input - looks good!',
-          message: 'We\'ve enhanced your care description to reassure parents.',
+          title: 'AI Enhancement Available',
+          message: 'The AI has refined your care description for better parent communication. You can accept this enhanced version or edit it further.',
           color: 'green'
         };
       default:
         return {
           icon: '✅',
-          title: 'Thanks for your input - looks good!',
-          message: 'We\'ve suggested some enhancements to make your report even better.',
+          title: 'AI Enhancement Available',
+          message: 'The AI has improved your text. You can accept this enhanced version or edit it further.',
           color: 'green'
         };
     }
@@ -244,7 +244,7 @@ const InjuryDetailsSection: React.FC<InjuryDetailsSectionProps> = ({
                         onClick={() => onAcceptSuggestion && onAcceptSuggestion('incident_description')}
                         className={`inline-flex items-center px-3 py-2 border border-transparent text-sm font-medium rounded-md ${getColorClasses('incident_description', !isSuggestionInsufficient(incidentSuggestion)).button} focus:outline-none focus:ring-2 focus:ring-offset-2`}
                       >
-                        Keep Suggestion
+                        Accept Enhancement
                       </button>
                     </div>
                   )}
@@ -306,7 +306,7 @@ const InjuryDetailsSection: React.FC<InjuryDetailsSectionProps> = ({
                         onClick={() => onAcceptSuggestion && onAcceptSuggestion('injury_description')}
                         className={`inline-flex items-center px-3 py-2 border border-transparent text-sm font-medium rounded-md ${getColorClasses('injury_description', !isSuggestionInsufficient(injurySuggestion)).button} focus:outline-none focus:ring-2 focus:ring-offset-2`}
                       >
-                        Keep Suggestion
+                        Accept Enhancement
                       </button>
                     </div>
                   )}
@@ -368,7 +368,7 @@ const InjuryDetailsSection: React.FC<InjuryDetailsSectionProps> = ({
                         onClick={() => onAcceptSuggestion && onAcceptSuggestion('action_taken')}
                         className={`inline-flex items-center px-3 py-2 border border-transparent text-sm font-medium rounded-md ${getColorClasses('action_taken', !isSuggestionInsufficient(actionSuggestion)).button} focus:outline-none focus:ring-2 focus:ring-offset-2`}
                       >
-                        Keep Suggestion
+                        Accept Enhancement
                       </button>
                     </div>
                   )}

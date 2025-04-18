@@ -167,6 +167,7 @@ export const useInjuryForm = (): UseInjuryFormReturn => {
   const processValidationResponse = (response: ValidationResponse) => {
     setValidationResponse(response);
     setShowSuggestions(true);
+    setParentNarrative(response.parent_narrative !== undefined ? response.parent_narrative : null);
     
     // Store original values before making any changes
     const originalValues = {
@@ -176,26 +177,14 @@ export const useInjuryForm = (): UseInjuryFormReturn => {
     };
     
     // Check for error status first
-    if (response.status === 'error') {
-      // TEST-ONLY CODE BLOCK - REMOVE FOR PRODUCTION - Added 2025-04-17 17:51 EDT
-      if (response.testDetails) {
-        alert(response.testDetails);
-      } else {
-        alert(response.message || 'There was an error validating your report. Please try again or submit as is.');
+    if (response.fieldEvaluations && response.fieldEvaluations.length > 0) {
+      // For successful responses with no suggestions, show success message
+      if (response.fieldEvaluations.every(evaluation => evaluation.status === 'sufficient')) {
+        alert('Your report looks good! No improvements needed.');
+        return;
       }
-      // END TEST-ONLY CODE BLOCK
-      return;
-    }
-    
-    // For successful responses with no suggestions, show success message
-    if (!response.suggestions || response.suggestions.length === 0) {
-      setParentNarrative(response.parentNarrative || null);
-      alert('Your report looks good! No improvements needed.');
-      return;
-    }
-    
-    // Process each suggestion
-    if (response.suggestions && response.suggestions.length > 0) {
+      
+      // Process each suggestion
       const updatedFormData = { ...formData };
       let fieldsUpdated = false;
       
@@ -214,12 +203,12 @@ export const useInjuryForm = (): UseInjuryFormReturn => {
       };
       
       // Check each suggestion
-      response.suggestions.forEach(suggestion => {
-        const formField = fieldMapping[suggestion.field];
-        const originalField = originalFieldMapping[suggestion.field];
+      response.fieldEvaluations.forEach(evaluation => {
+        const formField = fieldMapping[evaluation.field];
+        const originalField = originalFieldMapping[evaluation.field];
         
         if (formField) {
-          if (suggestion.reason === 'insufficient') {
+          if (evaluation.status === 'insufficient') {
             // For insufficient fields:
             // 1. Clear the field to prompt teacher to provide better input
             // 2. Store original value for reference
@@ -229,7 +218,7 @@ export const useInjuryForm = (): UseInjuryFormReturn => {
             }
             (updatedFormData[formField] as string) = '';
             fieldsUpdated = true;
-          } else if (suggestion.reason === 'sufficient') {
+          } else if (evaluation.status === 'sufficient') {
             // For sufficient fields:
             // 1. Store original value for reference
             // 2. Replace with AI's improved version of the text
@@ -238,7 +227,7 @@ export const useInjuryForm = (): UseInjuryFormReturn => {
               (updatedFormData[originalField] as string) = updatedFormData[formField] as string;
             }
             // The suggestion field contains the AI's improved version of the text
-            (updatedFormData[formField] as string) = suggestion.suggestion;
+            (updatedFormData[formField] as string) = evaluation.suggestion;
             fieldsUpdated = true;
           }
         }
@@ -267,7 +256,23 @@ export const useInjuryForm = (): UseInjuryFormReturn => {
     
     try {
       // Prepare data for validation
+      // Format the timestamp in Eastern Time for display
+      const injuryDate = new Date(`${formData.date}T${formData.time}`);
+      const formattedEasternTime = formatInTimeZone(
+        injuryDate,
+        'America/New_York',
+        'yyyy-MM-dd h:mm a zzz' // Format: 2025-04-17 11:30 AM EDT
+      );
+      
+      // Find the selected child to get their name
+      const selectedChild = children.find(child => child.id === formData.childId);
+      const childName = selectedChild ? selectedChild.name : '';
+      
+      // Prepare focused data payload (6 fields only) to conserve tokens
       const validationData = {
+        child_name: childName,                       // Added for context
+        injury_time_eastern: formattedEasternTime,   // Added for context
+        location: formData.location,                 // Added for context
         incident_description: formData.incidentDescription,
         injury_description: formData.injuryDescription,
         action_taken: formData.actionTaken,
@@ -296,14 +301,14 @@ export const useInjuryForm = (): UseInjuryFormReturn => {
   
   // Handle accepting a suggestion
   const handleAcceptSuggestion = (field: string) => {
-    if (!validationResponse || !validationResponse.suggestions) {
+    if (!validationResponse || !validationResponse.fieldEvaluations) {
       return;
     }
     
     // Find the suggestion for this field
-    const suggestion = validationResponse.suggestions.find(s => s.field === field);
+    const evaluation = validationResponse.fieldEvaluations.find(e => e.field === field);
     
-    if (!suggestion) {
+    if (!evaluation) {
       return;
     }
     
@@ -318,14 +323,14 @@ export const useInjuryForm = (): UseInjuryFormReturn => {
     
     // Update form data with suggestion
     if (formField) {
-      setFormData(prev => ({ ...prev, [formField]: suggestion.suggestion }));
+      setFormData(prev => ({ ...prev, [formField]: evaluation.suggestion }));
       setAcceptedSuggestions(prev => ({ ...prev, [field]: true }));
     }
   };
   
   // Handle accepting all suggestions
   const handleAcceptAllSuggestions = () => {
-    if (!validationResponse || !validationResponse.suggestions) {
+    if (!validationResponse || !validationResponse.fieldEvaluations) {
       return;
     }
     
@@ -341,12 +346,12 @@ export const useInjuryForm = (): UseInjuryFormReturn => {
     const newAcceptedSuggestions: Record<string, boolean> = { ...acceptedSuggestions };
     
     // Apply each suggestion
-    for (const suggestion of validationResponse.suggestions) {
-      const apiField = suggestion.field;
+    for (const evaluation of validationResponse.fieldEvaluations) {
+      const apiField = evaluation.field;
       const formField = fieldMapping[apiField];
       
       if (formField) {
-        (newFormData as any)[formField] = suggestion.suggestion;
+        (newFormData as any)[formField] = evaluation.suggestion;
         newAcceptedSuggestions[apiField] = true;
       }
     }
@@ -398,7 +403,7 @@ export const useInjuryForm = (): UseInjuryFormReturn => {
         aggressor_child_id: formData.isPeerAggression && formData.aggressorChildId ? formData.aggressorChildId : undefined,
         // Include AI validation info
         ai_validated: validationResponse !== null,
-        ai_suggestions_count: validationResponse ? Object.keys(validationResponse.suggestions || {}).length : 0,
+        ai_suggestions_count: validationResponse ? Object.keys(validationResponse.fieldEvaluations || {}).length : 0,
         ai_suggestions_accepted: Object.keys(acceptedSuggestions).length,
         // Include parent narrative if available
         parent_narrative: parentNarrative || undefined,

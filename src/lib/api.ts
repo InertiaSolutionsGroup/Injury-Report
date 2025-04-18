@@ -23,14 +23,26 @@ export type EnhancedReport = {
 
 export type ValidationResponse = {
   status: 'success' | 'error';
+  // Legacy field - will be deprecated
   suggestions?: {
     field: 'incident_description' | 'injury_description' | 'action_taken';
     original: string;
     suggestion: string;
     reason: string;
   }[];
+  // New field structure from updated n8n prompt
+  fieldEvaluations?: {
+    field: 'incident_description' | 'injury_description' | 'action_taken';
+    original: string;
+    status: 'sufficient' | 'insufficient';
+    suggestion: string;
+  }[];
   enhancedReport?: EnhancedReport;
+  // Legacy field - will be deprecated
   parentNarrative?: string;
+  // New field from updated n8n prompt
+  parent_narrative?: string | null;
+  model_name?: string;
   message?: string;
   // TEST-ONLY FIELD - REMOVE FOR PRODUCTION - Added 2025-04-17 17:51 EDT
   testDetails?: string;
@@ -133,9 +145,18 @@ export const validateInjuryReport = async (reportData: Partial<InjuryReport>): P
       
       console.log('Successfully parsed data:', parsedData);
       
+      // Extract enhanced report and parent narrative if available
+      const enhancedReport = parsedData.enhancedReport ? (parsedData.enhancedReport as EnhancedReport) : undefined;
+      const parentNarrative = parsedData.parent_narrative || parsedData.parentNarrative;
+
       // Build suggestions array from new or existing formats
       let suggestionsList = [];
+      let fieldEvaluations = null;
+
       if (parsedData.fieldEvaluations && Array.isArray(parsedData.fieldEvaluations)) {
+        fieldEvaluations = parsedData.fieldEvaluations;
+        
+        // For backward compatibility, also convert to suggestions format
         suggestionsList = parsedData.fieldEvaluations.map((fe: any) => ({
           field: fe.field,
           original: fe.original,
@@ -146,14 +167,11 @@ export const validateInjuryReport = async (reportData: Partial<InjuryReport>): P
         suggestionsList = parsedData.suggestions || [];
       }
       
-      // Extract enhanced report and parent narrative if available
-      const enhancedReport = parsedData.enhancedReport ? (parsedData.enhancedReport as EnhancedReport) : undefined;
-      const parentNarrative = parsedData.parent_narrative || parsedData.parentNarrative;
-      
       // TEST-ONLY LOGGING - REMOVE FOR PRODUCTION - Added 2025-04-17 16:53 EDT
       console.group('🔄 N8N FINAL PROCESSED RESULT - TEST MODE');
       console.log('%c✅ FINAL RESULT:', 'color: #006600; font-weight: bold; font-size: 14px');
       console.log('Suggestions:', suggestionsList);
+      console.log('Field Evaluations:', fieldEvaluations);
       console.log('Enhanced Report:', enhancedReport);
       console.log('Parent Narrative:', parentNarrative);
       console.groupEnd();
@@ -162,8 +180,11 @@ export const validateInjuryReport = async (reportData: Partial<InjuryReport>): P
       return {
         status: 'success',
         suggestions: suggestionsList,
+        fieldEvaluations,
         enhancedReport,
-        parentNarrative
+        parentNarrative,
+        parent_narrative: parsedData.parent_narrative,
+        model_name: parsedData.model_name
       };
     }
     

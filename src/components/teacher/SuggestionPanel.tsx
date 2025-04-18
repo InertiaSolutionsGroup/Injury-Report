@@ -1,102 +1,113 @@
 import React from 'react';
 import { ValidationResponse } from '../../lib/api';
+import ParentNarrativeSection from './ParentNarrativeSection';
 
 interface SuggestionPanelProps {
   validationResponse: ValidationResponse;
   acceptedSuggestions: Record<string, boolean>;
   onAcceptSuggestion: (field: string) => void;
   onAcceptAllSuggestions: () => void;
-  onFinalSubmit: () => void;
-  isSubmitting: boolean;
+  onSubmit: () => void;
+  parentNarrative?: string | null;
 }
 
+/**
+ * Component to display AI suggestions and controls for accepting them
+ * Also displays the parent narrative when all fields are sufficient
+ */
 const SuggestionPanel: React.FC<SuggestionPanelProps> = ({
   validationResponse,
   acceptedSuggestions,
   onAcceptSuggestion,
   onAcceptAllSuggestions,
-  onFinalSubmit,
-  isSubmitting,
+  onSubmit,
+  parentNarrative,
 }) => {
   if (!validationResponse) return null;
 
-  console.log('SuggestionPanel received validationResponse:', validationResponse);
-  console.log('SuggestionPanel received acceptedSuggestions:', acceptedSuggestions);
-
-  // Check if there are any suggestions
-  const hasSuggestions = validationResponse.suggestions && validationResponse.suggestions.length > 0;
-  console.log('Has suggestions:', hasSuggestions);
+  // Determine if we're using the new fieldEvaluations or legacy suggestions
+  const useFieldEvaluations = validationResponse.fieldEvaluations && validationResponse.fieldEvaluations.length > 0;
   
-  // Check if there is a parent narrative
-  const hasParentNarrative = !!validationResponse.parentNarrative;
-  console.log('Has parent narrative:', hasParentNarrative, validationResponse.parentNarrative);
+  // Count insufficient fields
+  const insufficientCount = useFieldEvaluations
+    ? validationResponse.fieldEvaluations!.filter(evaluation => evaluation.status === 'insufficient').length
+    : validationResponse.suggestions?.filter(s => s.reason === 'insufficient').length || 0;
+  
+  // Determine if all fields are sufficient
+  const allFieldsSufficient = insufficientCount === 0;
+
+  // Get parent narrative - prefer the new parent_narrative field, fall back to legacy parentNarrative
+  const narrative = parentNarrative !== undefined 
+    ? parentNarrative 
+    : validationResponse.parent_narrative !== undefined 
+      ? validationResponse.parent_narrative 
+      : validationResponse.parentNarrative || null;
+
+  // Prepare status message
+  let statusMessage = 'All fields have sufficient information. You can now submit the report.';
+  if (insufficientCount > 0) {
+    statusMessage = `${insufficientCount} field${insufficientCount > 1 ? 's' : ''} need${insufficientCount === 1 ? 's' : ''} more information before submitting.`;
+  }
+
+  // Determine if we should show the parent narrative section
+  const showParentNarrative = parentNarrative !== undefined || validationResponse.parent_narrative !== undefined || validationResponse.parentNarrative !== undefined;
 
   return (
-    <div className="space-y-6 mt-6">
-      {/* AI Suggestions Section */}
-      {hasSuggestions && (
-        <div className="rounded-md bg-yellow-50 p-4">
-          <div className="flex">
-            <div className="flex-shrink-0">
-              <svg className="h-5 w-5 text-yellow-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-                <path fillRule="evenodd" d="M18 10A8 8 0 11 2 10a8 8 0 0116 0zm-7-4a1 1 0 10-2 0v4a1 1 0 002 0V6zm-1 8a1 1 0 100-2 1 1 0 000 2z" clipRule="evenodd" />
-              </svg>
-            </div>
-            <div className="ml-3">
-              <h3 className="text-sm font-medium text-yellow-800">AI has suggested improvements to your report</h3>
-              <div className="mt-2 text-sm text-yellow-700">
-                <p>Please review the suggestions for each field and accept them if appropriate.</p>
-              </div>
-              <div className="mt-4">
-                <div className="flex space-x-4">
-                  <button
-                    type="button"
-                    onClick={onAcceptAllSuggestions}
-                    className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md shadow-sm text-white bg-primary hover:bg-secondary focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gold"
-                  >
-                    Accept All Suggestions
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Parent Narrative Section */}
-      {hasParentNarrative && (
-        <div className="rounded-md bg-green-50 p-4">
-          <div className="flex">
-            <div className="flex-shrink-0">
+    <div className="mt-8">
+      <h2 className="text-xl font-semibold mb-2">AI Validation Results</h2>
+      <div className="border-t border-gray-200 mb-4"></div>
+      
+      {/* Status message */}
+      <div className={`p-4 rounded-md mb-4 ${allFieldsSufficient ? 'bg-green-50 text-green-800' : 'bg-yellow-50 text-yellow-800'}`}>
+        <div className="flex">
+          <div className="flex-shrink-0">
+            {allFieldsSufficient ? (
               <svg className="h-5 w-5 text-green-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
                 <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
               </svg>
-            </div>
-            <div className="ml-3">
-              <h3 className="text-sm font-medium text-green-800">Parent-Friendly Narrative Generated</h3>
-              <div className="mt-2 text-sm text-green-700">
-                <p>The following narrative has been generated for parent communication:</p>
-                <div className="mt-2 p-3 bg-white rounded border border-green-200">
-                  <p className="whitespace-pre-wrap">{validationResponse.parentNarrative}</p>
-                </div>
-              </div>
-              <div className="mt-2 text-xs text-green-600">
-                <p>This narrative will be saved with the injury report and can be used for parent communications.</p>
-              </div>
-            </div>
+            ) : (
+              <svg className="h-5 w-5 text-yellow-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+              </svg>
+            )}
+          </div>
+          <div className="ml-3">
+            <p className="text-sm font-medium">
+              {statusMessage}
+            </p>
           </div>
         </div>
+      </div>
+
+      {/* Parent Narrative Section */}
+      {showParentNarrative && (
+        <ParentNarrativeSection 
+          narrative={narrative} 
+          allFieldsSufficient={allFieldsSufficient} 
+        />
       )}
 
       {/* Submit Button */}
-      <div className="flex justify-end">
+      <div className="mt-6 flex justify-between">
+        {/* Only show "Accept All Enhancements" when all fields are sufficient */}
+        {allFieldsSufficient && (
+          <button
+            type="button"
+            onClick={onAcceptAllSuggestions}
+            disabled={Object.keys(acceptedSuggestions).length === (useFieldEvaluations ? validationResponse.fieldEvaluations!.length : validationResponse.suggestions?.length || 0)}
+            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
+          >
+            Accept All Enhancements
+          </button>
+        )}
+        
         <button
           type="button"
-          onClick={onFinalSubmit}
-          className="inline-flex items-center px-4 py-2 border border-gold shadow-sm text-sm font-medium rounded-md text-dark bg-gold hover:bg-primary hover:text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gold"
-          disabled={isSubmitting}
+          onClick={onSubmit}
+          disabled={insufficientCount > 0}
+          className="ml-auto inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50"
         >
-          {isSubmitting ? 'Submitting...' : 'Submit Report'}
+          Submit Report
         </button>
       </div>
     </div>

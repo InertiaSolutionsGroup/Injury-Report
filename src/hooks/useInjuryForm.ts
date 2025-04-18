@@ -176,14 +176,8 @@ export const useInjuryForm = (): UseInjuryFormReturn => {
       actionTaken: formData.actionTaken
     };
     
-    // Check for error status first
+    // Process suggestions if available
     if (response.fieldEvaluations && response.fieldEvaluations.length > 0) {
-      // For successful responses with no suggestions, show success message
-      if (response.fieldEvaluations.every(evaluation => evaluation.status === 'sufficient')) {
-        alert('Your report looks good! No improvements needed.');
-        return;
-      }
-      
       // Process each suggestion
       const updatedFormData = { ...formData };
       let fieldsUpdated = false;
@@ -202,7 +196,7 @@ export const useInjuryForm = (): UseInjuryFormReturn => {
         'action_taken': 'originalActionTaken',
       };
       
-      // Check each suggestion
+      // Process each field evaluation
       response.fieldEvaluations.forEach(evaluation => {
         const formField = fieldMapping[evaluation.field];
         const originalField = originalFieldMapping[evaluation.field];
@@ -222,7 +216,7 @@ export const useInjuryForm = (): UseInjuryFormReturn => {
             // For sufficient fields:
             // 1. Store original value for reference
             // 2. Replace with AI's improved version of the text
-            // 3. The UI will show positive feedback and a "Keep Suggestion" button
+            // 3. The UI will show positive feedback and an "Accept Enhancement" button
             if (originalField) {
               (updatedFormData[originalField] as string) = updatedFormData[formField] as string;
             }
@@ -233,12 +227,58 @@ export const useInjuryForm = (): UseInjuryFormReturn => {
         }
       });
       
-      // Only update form data if fields were updated
+      // Update form data with the processed fields
       if (fieldsUpdated) {
-        // Delay updating to ensure component renders with original values first
-        setTimeout(() => {
-          setFormData(updatedFormData);
-        }, 100);
+        // Update immediately to show enhanced text in the form fields
+        setFormData(updatedFormData);
+      }
+    } else if (response.suggestions && response.suggestions.length > 0) {
+      // Legacy support for old API format
+      // Process each suggestion
+      const updatedFormData = { ...formData };
+      let fieldsUpdated = false;
+      
+      // Map API field names to form field names
+      const fieldMapping: Record<string, keyof InjuryFormData> = {
+        'incident_description': 'incidentDescription',
+        'injury_description': 'injuryDescription',
+        'action_taken': 'actionTaken',
+      };
+      
+      // Map API field names to original field names
+      const originalFieldMapping: Record<string, keyof InjuryFormData> = {
+        'incident_description': 'originalIncidentDescription',
+        'injury_description': 'originalInjuryDescription',
+        'action_taken': 'originalActionTaken',
+      };
+      
+      // Process each suggestion
+      response.suggestions.forEach(suggestion => {
+        const formField = fieldMapping[suggestion.field];
+        const originalField = originalFieldMapping[suggestion.field];
+        
+        if (formField) {
+          if (suggestion.reason === 'insufficient') {
+            // For insufficient fields
+            if (originalField) {
+              (updatedFormData[originalField] as string) = updatedFormData[formField] as string;
+            }
+            (updatedFormData[formField] as string) = '';
+            fieldsUpdated = true;
+          } else if (suggestion.reason === 'sufficient') {
+            // For sufficient fields
+            if (originalField) {
+              (updatedFormData[originalField] as string) = updatedFormData[formField] as string;
+            }
+            (updatedFormData[formField] as string) = suggestion.suggestion;
+            fieldsUpdated = true;
+          }
+        }
+      });
+      
+      // Update form data with the processed fields
+      if (fieldsUpdated) {
+        setFormData(updatedFormData);
       }
     }
   };

@@ -163,7 +163,16 @@ export const useInjuryForm = (): UseInjuryFormReturn => {
     return true;
   };
   
-  // Process validation response
+  /**
+   * Process validation response from n8n
+   * 
+   * This function handles the AI validation response and updates the form accordingly:
+   * - For sufficient fields: Shows the AI's enhanced text in the form fields
+   * - For insufficient fields: Clears the field and stores the original value
+   * - Sets up the parent narrative when all fields are sufficient
+   * 
+   * @param response - The validation response from n8n
+   */
   const processValidationResponse = (response: ValidationResponse) => {
     setValidationResponse(response);
     setShowSuggestions(true);
@@ -176,9 +185,9 @@ export const useInjuryForm = (): UseInjuryFormReturn => {
       actionTaken: formData.actionTaken
     };
     
-    // Process suggestions if available
+    // Process suggestions if available - using new fieldEvaluations format
     if (response.fieldEvaluations && response.fieldEvaluations.length > 0) {
-      // Process each suggestion
+      // Process each field evaluation
       const updatedFormData = { ...formData };
       let fieldsUpdated = false;
       
@@ -189,14 +198,14 @@ export const useInjuryForm = (): UseInjuryFormReturn => {
         'action_taken': 'actionTaken',
       };
       
-      // Map API field names to original field names
+      // Map API field names to original field names for storing pre-AI values
       const originalFieldMapping: Record<string, keyof InjuryFormData> = {
         'incident_description': 'originalIncidentDescription',
         'injury_description': 'originalInjuryDescription',
         'action_taken': 'originalActionTaken',
       };
       
-      // Process each field evaluation
+      // Process each field evaluation from the AI
       response.fieldEvaluations.forEach(evaluation => {
         const formField = fieldMapping[evaluation.field];
         const originalField = originalFieldMapping[evaluation.field];
@@ -206,7 +215,7 @@ export const useInjuryForm = (): UseInjuryFormReturn => {
             // For insufficient fields:
             // 1. Clear the field to prompt teacher to provide better input
             // 2. Store original value for reference
-            // 3. The placeholder text will show the AI's suggestion on what information is needed
+            // 3. The placeholder text will show the AI's guidance on what information is needed
             if (originalField) {
               (updatedFormData[originalField] as string) = updatedFormData[formField] as string;
             }
@@ -233,8 +242,8 @@ export const useInjuryForm = (): UseInjuryFormReturn => {
         setFormData(updatedFormData);
       }
     } else if (response.suggestions && response.suggestions.length > 0) {
-      // Legacy support for old API format
-      // Process each suggestion
+      // Legacy support for old API format (pre-April 2025)
+      // Process each suggestion using the older format
       const updatedFormData = { ...formData };
       let fieldsUpdated = false;
       
@@ -252,21 +261,21 @@ export const useInjuryForm = (): UseInjuryFormReturn => {
         'action_taken': 'originalActionTaken',
       };
       
-      // Process each suggestion
+      // Process each suggestion from the legacy API format
       response.suggestions.forEach(suggestion => {
         const formField = fieldMapping[suggestion.field];
         const originalField = originalFieldMapping[suggestion.field];
         
         if (formField) {
           if (suggestion.reason === 'insufficient') {
-            // For insufficient fields
+            // For insufficient fields - same logic as above
             if (originalField) {
               (updatedFormData[originalField] as string) = updatedFormData[formField] as string;
             }
             (updatedFormData[formField] as string) = '';
             fieldsUpdated = true;
           } else if (suggestion.reason === 'sufficient') {
-            // For sufficient fields
+            // For sufficient fields - same logic as above
             if (originalField) {
               (updatedFormData[originalField] as string) = updatedFormData[formField] as string;
             }
@@ -429,7 +438,8 @@ export const useInjuryForm = (): UseInjuryFormReturn => {
       
       const reportData = {
         child_id: formData.childId,
-        child_name: childName, // Add child name for reference
+        // child_name is removed as it's not in the database schema
+        // We only use it for the n8n validation but don't store it
         injury_timestamp: injuryTimestamp, // Keep for database storage
         injury_time_eastern: formattedEasternTime, // Only for display in n8n
         location: formData.location,

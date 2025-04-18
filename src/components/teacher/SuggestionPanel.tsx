@@ -12,8 +12,22 @@ interface SuggestionPanelProps {
 }
 
 /**
- * Component to display AI suggestions and controls for accepting them
- * Also displays the parent narrative when all fields are sufficient
+ * Component to display AI validation results and controls
+ * 
+ * This component shows:
+ * 1. Status message indicating if all fields are sufficient or how many need more information
+ * 2. Parent narrative section (when available)
+ * 3. Action buttons for accepting enhancements and submitting the report
+ * 
+ * The "Accept All Enhancements" button only appears when all fields are sufficient.
+ * The submit button is disabled when any field is insufficient.
+ * 
+ * @param validationResponse - The response from the n8n validation API
+ * @param acceptedSuggestions - Record of which suggestions have been accepted
+ * @param onAcceptSuggestion - Handler for accepting a single suggestion
+ * @param onAcceptAllSuggestions - Handler for accepting all suggestions at once
+ * @param onSubmit - Handler for submitting the final report
+ * @param parentNarrative - Optional parent narrative text that overrides the one in validationResponse
  */
 const SuggestionPanel: React.FC<SuggestionPanelProps> = ({
   validationResponse,
@@ -36,7 +50,7 @@ const SuggestionPanel: React.FC<SuggestionPanelProps> = ({
   // Determine if all fields are sufficient
   const allFieldsSufficient = insufficientCount === 0;
 
-  // Get parent narrative - prefer the new parent_narrative field, fall back to legacy parentNarrative
+  // Get parent narrative - prefer the passed prop, then the new parent_narrative field, then legacy parentNarrative
   const narrative = parentNarrative !== undefined 
     ? parentNarrative 
     : validationResponse.parent_narrative !== undefined 
@@ -57,7 +71,7 @@ const SuggestionPanel: React.FC<SuggestionPanelProps> = ({
       <h2 className="text-xl font-semibold mb-2">AI Validation Results</h2>
       <div className="border-t border-gray-200 mb-4"></div>
       
-      {/* Status message */}
+      {/* Status message - shows green for sufficient, yellow for insufficient */}
       <div className={`p-4 rounded-md mb-4 ${allFieldsSufficient ? 'bg-green-50 text-green-800' : 'bg-yellow-50 text-yellow-800'}`}>
         <div className="flex">
           <div className="flex-shrink-0">
@@ -79,7 +93,7 @@ const SuggestionPanel: React.FC<SuggestionPanelProps> = ({
         </div>
       </div>
 
-      {/* Parent Narrative Section */}
+      {/* Parent Narrative Section - only shown when narrative is available */}
       {showParentNarrative && (
         <ParentNarrativeSection 
           narrative={narrative} 
@@ -87,7 +101,7 @@ const SuggestionPanel: React.FC<SuggestionPanelProps> = ({
         />
       )}
 
-      {/* Submit Button */}
+      {/* Action buttons */}
       <div className="mt-6 flex justify-between">
         {/* Only show "Accept All Enhancements" when all fields are sufficient */}
         {allFieldsSufficient && (
@@ -101,6 +115,7 @@ const SuggestionPanel: React.FC<SuggestionPanelProps> = ({
           </button>
         )}
         
+        {/* Submit button - disabled when any field is insufficient */}
         <button
           type="button"
           onClick={onSubmit}

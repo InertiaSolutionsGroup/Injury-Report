@@ -5,14 +5,14 @@
     "created": "2025-04-17"
   },
   "formData": {
-    "child_id": "1",
-    "child_name": "Alex Smith",
+    "child_id": "c54abdc5-e77c-4262-af4b-7ed7dbe4553e",
+    "child_name": "Emily White",
     "injury_time_eastern": "2025-04-17 11:30 AM EDT",
     "location": "Playground",
-    "submitting_user_id": "101",
-    "incident_description": "Alex bumped heads with a friend while they were outside on the playground. They didn't see each other and collided.",
-    "injury_description": "Small red bump on his forehead, about the size of a quarter. No cut but some swelling. He cried for about 2 minutes but calmed down quickly.",
-    "action_taken": "Applied ice pack for 5 mins and gave him lots of cuddles. Sat with him in the quiet corner until he felt ready to play again. Checked on him throughout outdoor time.",
+    "submitting_user_id": "8f88c596-ea77-4805-b1cb-3e7db4f4c3d9",
+    "incident_description": "Emily bumped heads with a friend while they were on the Playground",
+    "injury_description": "Small red bump on her forehead. No cut but slight swelling. She cried for about 2 minutes but calmed down quickly.",
+    "action_taken": "Applied ice pack for 5 mins and gave her lots of cuddles. Sat with her in the quiet corner until she felt ready to play again",
     "is_bite": false,
     "is_peer_aggression": false
   }

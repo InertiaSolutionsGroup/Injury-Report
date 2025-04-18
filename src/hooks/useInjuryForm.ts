@@ -441,7 +441,7 @@ export const useInjuryForm = (): UseInjuryFormReturn => {
         // child_name is removed as it's not in the database schema
         // We only use it for the n8n validation but don't store it
         injury_timestamp: injuryTimestamp, // Keep for database storage
-        injury_time_eastern: formattedEasternTime, // Only for display in n8n
+        injury_time_eastern: formattedEasternTime, // Eastern Time formatted timestamp
         location: formData.location,
         submitting_user_id: formData.submittingUserId,
         incident_description: formData.incidentDescription,

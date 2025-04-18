@@ -38,6 +38,36 @@ When evaluating each field, consider information from all fields together:
 • For minimal but contextually clear descriptions, provide improvements rather than marking as insufficient
 • If one field provides information that would typically belong in another field, use this information to inform your evaluation
 
+### Special Handling for Action Taken
+When incident_description and injury_description are BOTH sufficient:
+• Be more lenient with the action_taken field, as you have good context about the incident
+• For minor injuries described in the injury_description, basic first aid like "ice pack" can be considered sufficient
+• When emotional support like "hugs" or "TLC" is mentioned, consider this sufficient for the comfort measures requirement
+• Always provide an improved version rather than marking as insufficient when you can reasonably infer the appropriate actions
+• Only mark action_taken as insufficient if it's completely missing critical information that cannot be inferred from context
+
+## EXAMPLES OF HOLISTIC EVALUATION
+
+### Example 1: Minor Head Bump with Brief Action Taken
+**Incident Description**: "This evening on the playground, Alex and Jayden bumped heads while running around the climber. Neither of them saw the other coming around the corner, which caused the accidental collision."
+**Injury Description**: "Alex has a small red bump on his forehead about the size of a quarter. There was no cut, but the area became slightly swollen. He cried for a couple of minutes before calming down."
+**Action Taken**: "It was a really small bump, so we just gave him an ice pack and lots of hugs, and he was just fine."
+
+**Correct Evaluation**:
+- Incident Description: SUFFICIENT (includes where, how, and context)
+- Injury Description: SUFFICIENT (includes type, location, size, appearance, and reaction)
+- Action Taken: SUFFICIENT (mentions ice pack and hugs, which is adequate given the context)
+
+**Improvement for Action Taken**:
+"Applied an ice pack to Alex's forehead for a few minutes and provided comfort with hugs. We monitored him after the incident, and he recovered quickly, returning to normal activities without any signs of distress."
+
+In this example, the action taken should be marked as sufficient because:
+1. The first two fields provide clear context about a minor injury
+2. Basic first aid (ice pack) is mentioned
+3. Emotional support (hugs) is included
+4. The outcome is noted ("he was just fine")
+5. The AI can reasonably enhance this rather than marking it as insufficient
+
 ## TASK 2: GENERATE STRUCTURED FEEDBACK
 For each field, you will:
 1. Determine if it meets minimum requirements (sufficient/insufficient) using the holistic approach
@@ -79,6 +109,9 @@ If ANY field is marked as INSUFFICIENT, set parent_narrative to null in the resp
    
 ✓ SUFFICIENT: "Applied ice pack to the bump for 5 minutes. Gave Alex hugs and sat with him in the quiet corner until he felt ready to play again. Checked on him throughout the morning."
    Includes FIRST-AID (ice pack, duration), COMFORT (hugs, quiet corner), and FOLLOW-UP (checking throughout morning)
+
+✓ CONTEXTUALLY SUFFICIENT: "We gave him an ice pack and lots of hugs, and he was fine."
+   When incident_description and injury_description provide good context about a minor bump with minimal swelling, this basic description can be considered sufficient and enhanced rather than marked insufficient.
 
 ## EXAMPLE OF PARENT NARRATIVE
 "This morning on the playground, Alex bumped heads with another child while they were running around the climber. He got a small red bump on his forehead (about the size of a quarter) with some swelling but no cut. We applied an ice pack for 5 minutes and gave him comfort in our quiet corner until he was ready to play again."

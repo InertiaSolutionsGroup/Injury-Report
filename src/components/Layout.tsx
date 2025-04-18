@@ -38,17 +38,36 @@ const Layout: React.FC = () => {
       </main>
       {/* Footer */}
       <footer className="bg-primary text-white border-t border-gold py-6 mt-8">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row items-center justify-between">
-          <p className="text-center text-sm font-body">&copy; {new Date().getFullYear()} Kids R Kids Injury Reporting MVP</p>
-          <div className="flex space-x-4 mt-3 md:mt-0">
-            <a href="https://www.facebook.com/kidsrkidscorporate" target="_blank" rel="noopener noreferrer" aria-label="Facebook">
-              <svg className="h-6 w-6 text-gold hover:text-white" fill="currentColor" viewBox="0 0 24 24"><path d="M22 12c0-5.522-4.477-10-10-10S2 6.478 2 12c0 4.991 3.657 9.128 8.438 9.877v-6.987h-2.54v-2.89h2.54V9.797c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.242 0-1.63.771-1.63 1.562v1.875h2.773l-.443 2.89h-2.33V21.877C18.343 21.128 22 16.991 22 12"/></svg>
-            </a>
-            <a href="https://www.instagram.com/kidsrkidscorporate/" target="_blank" rel="noopener noreferrer" aria-label="Instagram">
-              <svg className="h-6 w-6 text-gold hover:text-white" fill="currentColor" viewBox="0 0 24 24"><path d="M7.75 2h8.5A5.75 5.75 0 0 1 22 7.75v8.5A5.75 5.75 0 0 1 16.25 22h-8.5A5.75 5.75 0 0 1 2 16.25v-8.5A5.75 5.75 0 0 1 7.75 2zm0 1.5A4.25 4.25 0 0 0 3.5 7.75v8.5A4.25 4.25 0 0 0 7.75 20.5h8.5A4.25 4.25 0 0 0 20.5 16.25v-8.5A4.25 4.25 0 0 0 16.25 3.5zm4.25 2.75A5 5 0 1 1 7 11.25a5 5 0 0 1 5-5zm0 1.5a3.5 3.5 0 1 0 3.5 3.5a3.5 3.5 0 0 0-3.5-3.5zm5.25.75a1.25 1.25 0 1 1-2.5 0a1.25 1.25 0 0 1 2.5 0z"/></svg>
-            </a>
-            <a href="https://www.youtube.com/kidsrkidscorporate" target="_blank" rel="noopener noreferrer" aria-label="YouTube">
-              <svg className="h-6 w-6 text-gold hover:text-white" fill="currentColor" viewBox="0 0 24 24"><path d="M21.8 8.001a2.749 2.749 0 0 0-1.933-1.94C18.127 6 12 6 12 6s-6.127 0-7.867.061A2.749 2.749 0 0 0 2.2 8.001C2 9.74 2 12 2 12s0 2.26.2 3.999a2.749 2.749 0 0 0 1.933 1.94C5.873 18 12 18 12 18s6.127 0 7.867-.061a2.749 2.749 0 0 0 1.933-1.94C22 14.26 22 12 22 12s0-2.26-.2-3.999zM10 15.5v-7l6 3.5l-6 3.5z"/></svg>
+        {/* Powered by Inertia Solutions Group 
+         * 
+         * LOGO SIZE ADJUSTMENT INSTRUCTIONS:
+         * 1. To adjust logo size, modify the h-10 class on the img element below
+         *    - Increase the number for a larger logo (h-12, h-14, etc.)
+         *    - Decrease the number for a smaller logo (h-8, h-6, etc.)
+         *    - Tailwind uses a 4px scale, so h-10 = 40px, h-12 = 48px
+         * 
+         * 2. To adjust text size, modify the text-base class on the span element
+         *    - Options from smallest to largest: text-xs, text-sm, text-base, text-lg, text-xl
+         * 
+         * 3. To adjust spacing between text and logo, modify the space-x-3 class
+         *    - Increase the number for more space (space-x-4, space-x-5)
+         *    - Decrease the number for less space (space-x-2, space-x-1)
+         */}
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex justify-center">
+          <div className="flex items-center space-x-3">
+            <span className="text-base text-gray-200">Powered by</span>
+            <a 
+              href="https://inertiasolutionsgroup.com" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="flex items-center hover:opacity-80 transition-opacity"
+              aria-label="Inertia Solutions Group"
+            >
+              <img 
+                src="/inertia_logo_web.png" 
+                alt="Inertia Solutions Group" 
+                className="h-10 w-auto" /* Logo size: h-10 = 40px height, width scales proportionally */
+              />
             </a>
           </div>
         </div>

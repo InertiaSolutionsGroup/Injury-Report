@@ -468,10 +468,19 @@ export const useInjuryForm = (): UseInjuryFormReturn => {
       // Submit to Supabase
       const result = await createInjuryReport(reportData);
       console.log('Supabase response:', result);
-      alert('Injury report submitted successfully!');
+      console.log('Report submitted successfully:', result);
       
-      // Reset form after successful submission
+      // Reset the form after successful submission
       resetForm();
+      
+      // Scroll back to the top of the page
+      window.scrollTo({
+        top: 0,
+        behavior: 'smooth'
+      });
+      
+      // Remove success alert popup
+      // alert('Injury report submitted successfully!');
     } catch (error) {
       console.error('Error submitting report:', error);
       

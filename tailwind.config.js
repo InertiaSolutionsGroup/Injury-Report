@@ -32,6 +32,14 @@ module.exports = {
           'system-ui',
           'sans-serif',
         ],
+        handwriting: [
+          'Schoolbell',
+          'cursive'
+        ],
+        'parent-note': [
+          'Coming Soon',
+          'cursive'
+        ],
       },
     },
   },

@@ -1,0 +1,49 @@
+/* Boo-Boo Report Styles */
+
+/* Import Google Fonts for handwriting and parent note styles */
+@import url('https://fonts.googleapis.com/css2?family=Architects+Daughter&family=Coming+Soon&family=Schoolbell&display=swap');
+
+/* Font classes */
+.font-handwriting {
+  font-family: 'Schoolbell', cursive;
+}
+
+.font-parent-note {
+  font-family: 'Coming Soon', cursive;
+  line-height: 1.6;
+}
+
+/* Lined paper background */
+.bg-lined-paper {
+  background-color: white;
+  background-image: linear-gradient(#f1f5f9 1px, transparent 1px);
+  background-size: 100% 2rem;
+  position: relative;
+}
+
+/* Add a left margin line */
+.bg-lined-paper::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 2rem;
+  height: 100%;
+  width: 1px;
+  background-color: #cbd5e1;
+}
+
+/* Print styles */
+@media print {
+  .boo-boo-report {
+    box-shadow: none !important;
+    max-width: 100% !important;
+  }
+  
+  .bg-lined-paper {
+    background-image: linear-gradient(#f8fafc 1px, transparent 1px);
+  }
+  
+  .bg-lined-paper::before {
+    background-color: #e2e8f0;
+  }
+}

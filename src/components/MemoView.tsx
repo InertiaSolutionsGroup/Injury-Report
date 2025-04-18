@@ -2,9 +2,10 @@ import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useInjuryReport } from '../hooks/useInjuryReport';
 import MemoHeader from './memo/MemoHeader';
-import MemoContainer from './memo/MemoContainer';
+import BooBooReport from './memo/BooBooreport';
 import ReviewModal from './memo/ReviewModal';
 import DeliverModal from './memo/DeliverModal';
+import '../styles/booboo-report.css';
 
 const MemoView: React.FC = () => {
   const { reportId } = useParams<{ reportId: string }>();
@@ -88,13 +89,19 @@ const MemoView: React.FC = () => {
         onPrint={() => window.print()}
       />
       
-      {/* Memo Content */}
-      <MemoContainer
-        isGeneratingMemo={isGeneratingMemo}
-        memoError={memoError}
-        memo={memo}
-        onRetryGeneration={handleRetryMemoGeneration}
-      />
+      {/* Boo-Boo Report */}
+      <div className="px-4 py-5 sm:p-6">
+        <BooBooReport
+          report={report}
+          isLoading={isLoading}
+          memo={memo}
+          isGeneratingMemo={isGeneratingMemo}
+          memoError={memoError}
+          onRetryGeneration={handleRetryMemoGeneration}
+          childName={getChildName()}
+          formattedDate={formattedDate}
+        />
+      </div>
       
       {/* Modals */}
       <ReviewModal

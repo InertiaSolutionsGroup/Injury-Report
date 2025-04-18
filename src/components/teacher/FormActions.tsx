@@ -30,7 +30,7 @@ const FormActions: React.FC<FormActionsProps> = ({
         onClick={(e) => onSubmit(e)}
         className="ml-3 inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-bold rounded-md text-white bg-primary hover:bg-secondary focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gold transition-colors duration-150 uppercase"
       >
-        {isSubmitting ? 'PROCESSING...' : 'SUBMIT FOR REVIEW'}
+        {isSubmitting ? 'PROCESSING...' : 'SUBMIT TO AI'}
       </button>
     )}
     {showSuggestions && onReevaluate && (
@@ -40,7 +40,7 @@ const FormActions: React.FC<FormActionsProps> = ({
         disabled={isSubmitting}
         className="ml-3 inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-bold rounded-md text-white bg-primary hover:bg-secondary focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gold transition-colors duration-150 uppercase"
       >
-        {isSubmitting ? 'PROCESSING...' : 'RE-EVALUATE WITH AI'}
+        {isSubmitting ? 'PROCESSING...' : 'RESUBMIT TO AI'}
       </button>
     )}
   </div>

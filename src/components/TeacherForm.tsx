@@ -39,6 +39,7 @@ const TeacherForm: React.FC = () => {
   // Updated 2025-04-17 16:30 EDT: Changed to use direct state updates instead of DOM manipulation
   // Updated 2025-04-17 16:36 EDT: Added essential logging for troubleshooting
   // Updated 2025-04-17 16:44 EDT: Added form reset before loading new test data
+  // Updated 2025-04-18 10:22 EDT: Added mapping between snake_case and camelCase property names
   const handleSelectTestData = (testData: any) => {
     // TEST-ONLY LOGGING - REMOVE FOR PRODUCTION
     console.log('TeacherForm received test data:', testData);
@@ -52,15 +53,43 @@ const TeacherForm: React.FC = () => {
     console.log('Form reset. Now loading new test data.');
     // END TEST-ONLY LOGGING
     
-    // Directly update the form state with the test data
+    // Map snake_case property names to camelCase property names
+    const mappedData: any = {};
+    
+    // Property name mapping
+    const propertyMapping: Record<string, string> = {
+      'child_id': 'childId',
+      'child_name': 'childName',
+      'injury_time_eastern': 'injuryTimeEastern',
+      'submitting_user_id': 'submittingUserId',
+      'incident_description': 'incidentDescription',
+      'injury_description': 'injuryDescription',
+      'action_taken': 'actionTaken',
+      'is_bite': 'isBite',
+      'is_peer_aggression': 'isPeerAggression',
+      'biter_child_id': 'biterChildId',
+      'aggressor_child_id': 'aggressorChildId'
+    };
+    
+    // Map each property from the test data to the correct form property name
+    Object.keys(testData).forEach(key => {
+      const mappedKey = propertyMapping[key] || key;
+      mappedData[mappedKey] = testData[key];
+    });
+    
+    // TEST-ONLY LOGGING - REMOVE FOR PRODUCTION
+    console.log('Mapped test data:', mappedData);
+    // END TEST-ONLY LOGGING
+    
+    // Directly update the form state with the mapped test data
     setFormData(prevData => {
       // TEST-ONLY LOGGING - REMOVE FOR PRODUCTION
-      console.log('Updating form data with:', testData);
+      console.log('Updating form data with mapped data:', mappedData);
       // END TEST-ONLY LOGGING
       
       const newData = {
         ...prevData,
-        ...testData
+        ...mappedData
       };
       
       // TEST-ONLY LOGGING - REMOVE FOR PRODUCTION
@@ -82,10 +111,8 @@ const TeacherForm: React.FC = () => {
   return (
     <div className="bg-white shadow overflow-hidden sm:rounded-lg">
       <div className="px-4 py-5 sm:p-6">
-        {/* TEST-ONLY - REMOVE FOR PRODUCTION */}
-        {process.env.NODE_ENV !== 'production' && (
-          <TestDataSelector onSelectTestData={handleSelectTestData} />
-        )}
+        {/* TEST-ONLY - Keep for demo purposes */}
+        <TestDataSelector onSelectTestData={handleSelectTestData} />
         {/* END TEST-ONLY */}
         
         <form className="space-y-8 divide-y divide-gray-200">
